@@ -28,59 +28,59 @@ set -e  # Exit immediately if any command fails
 # - Removes RStudio VMSS, supporting infra, and NFS storage
 # - Deletes all custom RStudio images in the resource group
 # ------------------------------------------------------------------------------
-cd 04-cluster
+# cd 04-aks
 
-vault=$(az keyvault list \
-  --resource-group rstudio-network-rg \
-  --query "[?starts_with(name, 'ad-key-vault')].name | [0]" \
-  --output tsv)
+# vault=$(az keyvault list \
+#   --resource-group rstudio-network-rg \
+#   --query "[?starts_with(name, 'ad-key-vault')].name | [0]" \
+#   --output tsv)
 
-echo "NOTE: Using Key Vault: $vault"
+# echo "NOTE: Using Key Vault: $vault"
 
-rstudio_image_name=$(az image list \
-  --resource-group rstudio-vmss-rg \
-  --query "[?starts_with(name, 'rstudio_image')]|sort_by(@, &name)[-1].name" \
-  --output tsv)
+# rstudio_image_name=$(az image list \
+#   --resource-group rstudio-vmss-rg \
+#   --query "[?starts_with(name, 'rstudio_image')]|sort_by(@, &name)[-1].name" \
+#   --output tsv)
 
-echo "NOTE: Using the latest image ($rstudio_image_name) in rstudio-vmss-rg."
+# echo "NOTE: Using the latest image ($rstudio_image_name) in rstudio-vmss-rg."
 
-if [ -z "$rstudio_image_name" ]; then
-  echo "ERROR: No RStudio image with prefix 'rstudio_image' found. Exiting."
-  exit 1
-fi
+# if [ -z "$rstudio_image_name" ]; then
+#   echo "ERROR: No RStudio image with prefix 'rstudio_image' found. Exiting."
+#   exit 1
+# fi
 
-secretsJson=$(az keyvault secret show \
-  --name ubuntu-credentials \
-  --vault-name ${vault} \
-  --query value \
-  -o tsv)
+# secretsJson=$(az keyvault secret show \
+#   --name ubuntu-credentials \
+#   --vault-name ${vault} \
+#   --query value \
+#   -o tsv)
 
-password=$(echo "$secretsJson" | jq -r '.password')
+# password=$(echo "$secretsJson" | jq -r '.password')
 
-storage_account=$(az storage account list \
-  --resource-group rstudio-servers-rg \
-  --query "[?starts_with(name, 'nfs')].name | [0]" \
-  -o tsv 2>/dev/null)
+# storage_account=$(az storage account list \
+#   --resource-group rstudio-servers-rg \
+#   --query "[?starts_with(name, 'nfs')].name | [0]" \
+#   -o tsv 2>/dev/null)
 
-terraform init
-terraform destroy -var="vault_name=$vault" \
-                  -var="nfs_storage_account=$storage_account" \
-                  -var="ubuntu_password=$password" \
-                  -var="rstudio_image_name=$rstudio_image_name" \
-                  -auto-approve
+# terraform init
+# terraform destroy -var="vault_name=$vault" \
+#                   -var="nfs_storage_account=$storage_account" \
+#                   -var="ubuntu_password=$password" \
+#                   -var="rstudio_image_name=$rstudio_image_name" \
+#                   -auto-approve
 
-cd ..
+# cd ..
 
-az image list \
-  --resource-group "rstudio-vmss-rg" \
-  --query "[].name" \
-  -o tsv | while read -r IMAGE; do
-    echo "NOTE: Deleting image: $IMAGE"
-    az image delete \
-      --name "$IMAGE" \
-      --resource-group "rstudio-vmss-rg" \
-      || echo "WARNING: Failed to delete $IMAGE — skipping"
-done
+# az image list \
+#   --resource-group "rstudio-vmss-rg" \
+#   --query "[].name" \
+#   -o tsv | while read -r IMAGE; do
+#     echo "NOTE: Deleting image: $IMAGE"
+#     az image delete \
+#       --name "$IMAGE" \
+#       --resource-group "rstudio-vmss-rg" \
+#       || echo "WARNING: Failed to delete $IMAGE — skipping"
+# done
 
 # ------------------------------------------------------------------------------
 # Phase 2: Destroy Server Layer
@@ -111,4 +111,4 @@ terraform init
 terraform destroy -auto-approve
 
 cd ..
-echo "NOTE: Azure RStudio Cluster and Mini-AD environment destroyed successfully."
+echo "NOTE: Azure RStudio AKS Cluster and Mini-AD environment destroyed successfully."

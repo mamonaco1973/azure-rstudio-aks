@@ -86,18 +86,18 @@ cd ..
 # - Uses Packer to build custom Linux VM image with R + RStudio.
 # - Auth handled via Azure service principal credentials.
 # ------------------------------------------------------------------------------
-cd 03-packer
+# cd 03-packer
 
-packer init .
-packer build \
-  -var="client_id=$ARM_CLIENT_ID" \
-  -var="client_secret=$ARM_CLIENT_SECRET" \
-  -var="subscription_id=$ARM_SUBSCRIPTION_ID" \
-  -var="tenant_id=$ARM_TENANT_ID" \
-  -var="resource_group=rstudio-vmss-rg" \
-  rstudio_image.pkr.hcl
+# packer init .
+# packer build \
+#   -var="client_id=$ARM_CLIENT_ID" \
+#   -var="client_secret=$ARM_CLIENT_SECRET" \
+#   -var="subscription_id=$ARM_SUBSCRIPTION_ID" \
+#   -var="tenant_id=$ARM_TENANT_ID" \
+#   -var="resource_group=rstudio-vmss-rg" \
+#   rstudio_image.pkr.hcl
 
-cd ..
+# cd ..
 
 # ------------------------------------------------------------------------------
 # Phase 4: Deploy RStudio Cluster (VM Scale Set)
@@ -106,42 +106,42 @@ cd ..
 # - Discovers NFS storage account from Phase 2
 # - Deploys RStudio cluster via VMSS (joined to AD, backed by NFS)
 # ------------------------------------------------------------------------------
-rstudio_image_name=$(az image list \
-  --resource-group rstudio-vmss-rg \
-  --query "[?starts_with(name, 'rstudio_image')]|sort_by(@, &name)[-1].name" \
-  --output tsv)
+# rstudio_image_name=$(az image list \
+#   --resource-group rstudio-vmss-rg \
+#   --query "[?starts_with(name, 'rstudio_image')]|sort_by(@, &name)[-1].name" \
+#   --output tsv)
 
-echo "NOTE: Using the latest image ($rstudio_image_name) in rstudio-vmss-rg."
+# echo "NOTE: Using the latest image ($rstudio_image_name) in rstudio-vmss-rg."
 
-if [ -z "$rstudio_image_name" ]; then
-  echo "ERROR: No image with prefix 'rstudio_image' in rstudio-vmss-rg."
-  exit 1
-fi
+# if [ -z "$rstudio_image_name" ]; then
+#   echo "ERROR: No image with prefix 'rstudio_image' in rstudio-vmss-rg."
+#   exit 1
+# fi
 
-secretsJson=$(az keyvault secret show \
-  --name ubuntu-credentials \
-  --vault-name ${vault} \
-  --query value \
-  -o tsv)
+# secretsJson=$(az keyvault secret show \
+#   --name ubuntu-credentials \
+#   --vault-name ${vault} \
+#   --query value \
+#   -o tsv)
 
-password=$(echo "$secretsJson" | jq -r '.password')
+# password=$(echo "$secretsJson" | jq -r '.password')
 
-storage_account=$(az storage account list \
-  --resource-group rstudio-servers-rg \
-  --query "[?starts_with(name, 'nfs')].name | [0]" \
-  -o tsv 2>/dev/null)
+# storage_account=$(az storage account list \
+#   --resource-group rstudio-servers-rg \
+#   --query "[?starts_with(name, 'nfs')].name | [0]" \
+#   -o tsv 2>/dev/null)
 
-cd 04-cluster
-terraform init
-terraform apply -var="vault_name=$vault" \
-                -var="nfs_storage_account=$storage_account" \
-                -var="ubuntu_password=$password" \
-                -var="rstudio_image_name=$rstudio_image_name" \
-                -auto-approve
+# cd 04-cluster
+# terraform init
+# terraform apply -var="vault_name=$vault" \
+#                 -var="nfs_storage_account=$storage_account" \
+#                 -var="ubuntu_password=$password" \
+#                 -var="rstudio_image_name=$rstudio_image_name" \
+#                 -auto-approve
 
-cd ..
-echo "NOTE: Azure RStudio Cluster deployment completed successfully."
+# cd ..
+# echo "NOTE: Azure RStudio Cluster deployment completed successfully."
 
 # Validate that the cluster is ready.
 
-./validate.sh
+#./validate.sh
