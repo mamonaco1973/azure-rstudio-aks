@@ -72,7 +72,7 @@ data "azurerm_virtual_network" "aks_vnet" {
 data "azurerm_subnet" "vm_subnet" {
   name                 = "vm-subnet"
   resource_group_name  = data.azurerm_resource_group.ad.name
-  virtual_network_name = data.azurerm_virtual_network.ad_vnet.name
+  virtual_network_name = data.azurerm_virtual_network.aks_vnet.name
 }
 
 # --------------------------------------------------------------------------------------------------
