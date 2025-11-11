@@ -117,7 +117,7 @@ echo "NOTE: Full image name: ${FULL_IMAGE}"
 # ------------------------------------------------------------------------------
 secretsJson=$(az keyvault secret show \
   --name rstudio-credentials \
-  --vault-name "${VAULT_NAME}" \
+  --vault-name "$vault" \
   --query value -o tsv)
 
 RSTUDIO_PASSWORD=$(echo "$secretsJson" | jq -r '.password')
