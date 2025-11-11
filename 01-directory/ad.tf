@@ -11,7 +11,7 @@ module "mini_ad" {
   source            = "github.com/mamonaco1973/module-azure-mini-ad" # Path to the mini-ad Terraform module
   location          = var.resource_group_location                    # Azure region (from input variable)
   netbios           = var.netbios                                    # NetBIOS domain name (e.g., MCLOUD)
-  vnet_id           = azurerm_virtual_network.ad_vnet.id             # Virtual Network where the AD will reside
+  vnet_id           = azurerm_virtual_network.aks_vnet.id            # Virtual Network where the AD will reside
   realm             = var.realm                                      # Kerberos realm (usually UPPERCASE DNS domain)
   users_json        = local.users_json                               # JSON blob of users and passwords (built below)
   user_base_dn      = var.user_base_dn                               # Base DN for user accounts in LDAP
