@@ -153,6 +153,7 @@ cd ..
 cd 04-aks
 terraform init
 terraform apply -var="vault_name=$vault" \
+                -var="acr_name=$ACR_NAME" \
                 -auto-approve
 
 cd ..

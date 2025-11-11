@@ -48,8 +48,7 @@ data "azurerm_virtual_network" "cluster_vnet" {
   resource_group_name = data.azurerm_resource_group.project_rg.name
 }
 
-# ------------------------------------------------------------------------------------------
-
+# -----------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 # Key Vault Lookup
 # - Existing Key Vault used for credentials and secrets
@@ -58,3 +57,13 @@ data "azurerm_key_vault" "ad_key_vault" {
   name                = var.vault_name
   resource_group_name = data.azurerm_resource_group.project_rg.name
 }
+
+# ---------------------------------------------------------
+# Azure Container Registry Lookup (ACR)
+# ---------------------------------------------------------
+data "azurerm_container_registry" "rstudio_acr" {
+  name                = var.acr_name  # Registry name provided via Terraform variable
+  resource_group_name = data.azurerm_resource_group.aks_rg.name
+  # Used to grant ACR Pull permissions to AKS identity and to reference private image URIs.
+}
+
