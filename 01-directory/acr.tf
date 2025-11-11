@@ -21,10 +21,10 @@ resource "azurerm_container_registry" "rstudio_acr" {
   # Dynamically generates a unique ACR name like 'flaskappx8s7kp2a'
   # Avoids naming collisions across Azure subscriptions and tenants
 
-  resource_group_name = azurerm_resource_group.aks_flaskapp_rg.name
+  resource_group_name = azurerm_resource_group.aks.name
   # Deploys the ACR into the same resource group as the AKS cluster
 
-  location = azurerm_resource_group.aks_flaskapp_rg.location
+  location = azurerm_resource_group.aks.location
   # Ensures ACR is created in the same Azure region for lower latency and reduced egress costs
 
   sku = "Basic"
