@@ -10,7 +10,7 @@
 # --------------------------------------------------------------------------------------------------
 resource "azurerm_virtual_network" "aks_vnet" {
   name                = "aks-vnet"
-  address_space       = ["10.0.0.0/23"] # Overall VNet range
+  address_space       = ["10.0.0.0/8"] # Overall VNet range
   location            = azurerm_resource_group.ad.location
   resource_group_name = azurerm_resource_group.ad.name
 }
@@ -119,7 +119,7 @@ resource "azurerm_subnet" "vm_subnet" {
   name                          = "vm-subnet"
   resource_group_name           = azurerm_resource_group.ad.name
   virtual_network_name          = azurerm_virtual_network.aks_vnet.name
-  address_prefixes              = ["10.0.0.0/25"]
+  address_prefixes              = ["10.240.0.0/24"]   
   default_outbound_access_enabled = false
 
   depends_on = [azurerm_virtual_network.aks_vnet]
@@ -130,7 +130,7 @@ resource "azurerm_subnet" "mini_ad_subnet" {
   name                          = "mini-ad-subnet"
   resource_group_name           = azurerm_resource_group.ad.name
   virtual_network_name          = azurerm_virtual_network.aks_vnet.name
-  address_prefixes              = ["10.0.0.128/25"]
+  address_prefixes              = ["10.240.1.0/24"]
   default_outbound_access_enabled = false
 
   depends_on = [azurerm_subnet.vm_subnet]
@@ -141,7 +141,7 @@ resource "azurerm_subnet" "bastion_subnet" {
   name                 = "AzureBastionSubnet"
   resource_group_name  = azurerm_resource_group.ad.name
   virtual_network_name = azurerm_virtual_network.aks_vnet.name
-  address_prefixes     = ["10.0.1.0/25"]
+  address_prefixes     = ["10.240.2.0/24"]
 
   depends_on = [azurerm_subnet.mini_ad_subnet]
 }
@@ -151,7 +151,7 @@ resource "azurerm_subnet" "app_gateway_subnet" {
   name                 = "app-gateway-subnet"
   resource_group_name  = azurerm_resource_group.ad.name
   virtual_network_name = azurerm_virtual_network.aks_vnet.name
-  address_prefixes     = ["10.0.1.128/25"]
+  address_prefixes     = ["10.240.3.0/24"]
 
   depends_on = [azurerm_subnet.bastion_subnet]
 }
