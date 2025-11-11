@@ -58,8 +58,8 @@ resource "azurerm_resource_group" "ad" {
   location = var.resource_group_location
 }
 
-resource "azurerm_resource_group" "vmss" {
-  name     = "rstudio-vmss-rg"
+resource "azurerm_resource_group" "aks" {
+  name     = "rstudio-aks-rg"
   location = var.resource_group_location
 }
 

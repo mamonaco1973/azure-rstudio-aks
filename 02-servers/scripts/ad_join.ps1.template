@@ -52,7 +52,7 @@ for ($i=1; $i -le $maxRetries; $i++) {
     try {
         Add-LocalGroupMember -Group "Remote Desktop Users" -Member $domainGroup -ErrorAction Stop
         Write-Output "SUCCESS: Added $domainGroup to Remote Desktop Users"
-        breaks
+        break
     } catch {
         Write-Output "WARN: Attempt $i failed - waiting $retryDelay seconds..."
         Start-Sleep -Seconds $retryDelay

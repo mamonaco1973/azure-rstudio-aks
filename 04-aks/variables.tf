@@ -92,13 +92,13 @@ variable "project_group_name" {
 
 # ------------------------------------------------------------------------------------------
 # Resource Group Name
-# - For RStudio VMSS deployment
+# - For RStudio AKS deployment
 # ------------------------------------------------------------------------------------------
 
-variable "cluster_group_name" {
+variable "aks_group_name" {
   description = "Resource group used for the image and network resources"
   type        = string
-  default     = "rstudio-vmss-rg"
+  default     = "rstudio-aks-rg"
 }
 
 # ------------------------------------------------------------------------------------------
