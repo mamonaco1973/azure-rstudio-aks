@@ -74,7 +74,7 @@ variable "subnet_name" {
 # Resource Group Name
 # - Existing Azure resource group for networking resources
 # ------------------------------------------------------------------------------------------
-variable "project_group_name" {
+variable "network_group_name" {
   description = "Resource group used for the network resources"
   type        = string
   default     = "rstudio-network-rg"
