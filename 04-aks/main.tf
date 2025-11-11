@@ -31,8 +31,8 @@ data "azurerm_client_config" "current" {}
 # Resource Group Lookups
 # - Existing resource group used for image, network, and secrets
 # ------------------------------------------------------------------------------------------
-data "azurerm_resource_group" "cluster_rg" {
-  name = var.cluster_group_name
+data "azurerm_resource_group" "aks_rg" {
+  name = var.aks_group_name
 }
 
 data "azurerm_resource_group" "project_rg" {
