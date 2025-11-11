@@ -61,8 +61,8 @@ data "azurerm_resource_group" "servers" {
 # --------------------------------------------------------------------------------------------------
 # Fetch details about existing Virtual Network
 # --------------------------------------------------------------------------------------------------
-data "azurerm_virtual_network" "ad_vnet" {
-  name                = "ad-vnet"
+data "azurerm_virtual_network" "aks_vnet" {
+  name                = "aks-vnet"
   resource_group_name = data.azurerm_resource_group.ad.name
 }
 
