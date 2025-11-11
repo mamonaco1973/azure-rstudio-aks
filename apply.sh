@@ -159,6 +159,21 @@ terraform apply -var="vault_name=$vault" \
 cd ..
 echo "NOTE: Azure RStudio Cluster deployment completed successfully."
 
+# ------------------------------------------------------------------------------
+# Phase 5: Configure kubectl for AKS Cluster Access
+# ------------------------------------------------------------------------------
+
+rm -f -r ~/.kube               # Clear any existing kubeconfig
+az aks get-credentials \
+  --resource-group rstudio-aks-rg \
+  --name rstudio-aks             # Download AKS kubeconfig
+
+az aks update \
+  --name flask-aks \
+  --resource-group rstudio-aks-rg \
+  --attach-acr $ACR_NAME > /dev/null
+
+
 # Validate that the cluster is ready.
 
 ./validate.sh
