@@ -6,9 +6,9 @@
 # It allows AKS pods to securely access Azure resources like ACR and Cosmos DB without needing secrets.
 
 resource "azurerm_user_assigned_identity" "k8s_identity" {
-  location            = data.azurerm_resource_group.aks_rg.location         # Place identity in same region as AKS cluster
-  name                = "k8s-identity"                                      # Friendly name for tracking in Azure portal
-  resource_group_name = data.azurerm_resource_group.aks_rg.name             # Identity lives in the same RG as AKS
+  location            = data.azurerm_resource_group.aks_rg.location # Place identity in same region as AKS cluster
+  name                = "k8s-identity"                              # Friendly name for tracking in Azure portal
+  resource_group_name = data.azurerm_resource_group.aks_rg.name     # Identity lives in the same RG as AKS
 }
 
 resource "azurerm_role_assignment" "k8s_identity_network_contributor" {
@@ -55,11 +55,11 @@ resource "azurerm_federated_identity_credential" "keyvault_sa_binding" {
 # Enables the autoscaler to authenticate to Azure (e.g., to interact with VMSS APIs).
 
 resource "azurerm_federated_identity_credential" "autoscaler" {
-  name                = "autoscaler-federated"                                   # Unique name for the autoscaler federated credential
-  resource_group_name = data.azurerm_resource_group.aks_rg.name                   # Same RG as other components
-  parent_id           = azurerm_user_assigned_identity.k8s_identity.id           # Attach to the shared identity
+  name                = "autoscaler-federated"                         # Unique name for the autoscaler federated credential
+  resource_group_name = data.azurerm_resource_group.aks_rg.name        # Same RG as other components
+  parent_id           = azurerm_user_assigned_identity.k8s_identity.id # Attach to the shared identity
 
-  issuer   = azurerm_kubernetes_cluster.flask_aks.oidc_issuer_url                # AKS cluster's OIDC issuer URL
-  subject  = "system:serviceaccount:kube-system:cluster-autoscaler"              # Kubernetes SA for the autoscaler workload
-  audience = ["api://AzureADTokenExchange"]                                      # Audience required for token validation in Azure
+  issuer   = azurerm_kubernetes_cluster.flask_aks.oidc_issuer_url   # AKS cluster's OIDC issuer URL
+  subject  = "system:serviceaccount:kube-system:cluster-autoscaler" # Kubernetes SA for the autoscaler workload
+  audience = ["api://AzureADTokenExchange"]                         # Audience required for token validation in Azure
 }

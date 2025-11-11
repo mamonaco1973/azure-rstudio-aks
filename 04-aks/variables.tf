@@ -114,7 +114,7 @@ variable "vault_name" {
 # ---------------------------------------------------------
 variable "acr_name" {
   description = "Name of the ACR repository"
-  type        = string                      # Must be a valid Azure resource name (e.g., lowercase, no spaces)
+  type        = string # Must be a valid Azure resource name (e.g., lowercase, no spaces)
 
   # Used to resolve ACR metadata using the azurerm_container_registry data source.
   # Enables role assignment (e.g., acrpull) and dynamic container image referencing.

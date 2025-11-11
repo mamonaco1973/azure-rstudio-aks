@@ -62,7 +62,7 @@ data "azurerm_key_vault" "ad_key_vault" {
 # Azure Container Registry Lookup (ACR)
 # ---------------------------------------------------------
 data "azurerm_container_registry" "rstudio_acr" {
-  name                = var.acr_name  # Registry name provided via Terraform variable
+  name                = var.acr_name # Registry name provided via Terraform variable
   resource_group_name = data.azurerm_resource_group.aks_rg.name
   # Used to grant ACR Pull permissions to AKS identity and to reference private image URIs.
 }
