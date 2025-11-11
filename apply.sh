@@ -169,7 +169,7 @@ az aks get-credentials \
   --name rstudio-aks             # Download AKS kubeconfig
 
 az aks update \
-  --name flask-aks \
+  --name rstudio-aks \
   --resource-group rstudio-aks-rg \
   --attach-acr $ACR_NAME > /dev/null
 
