@@ -45,7 +45,7 @@ data "azurerm_resource_group" "network_rg" {
 # ------------------------------------------------------------------------------------------
 data "azurerm_virtual_network" "cluster_vnet" {
   name                = var.vnet_name
-  resource_group_name = data.azurerm_resource_group.project_rg.name
+  resource_group_name = data.azurerm_resource_group.network_rg.name
 }
 
 # -----------------------------------------------------------------------------------------
@@ -55,7 +55,7 @@ data "azurerm_virtual_network" "cluster_vnet" {
 # ------------------------------------------------------------------------------------------
 data "azurerm_key_vault" "ad_key_vault" {
   name                = var.vault_name
-  resource_group_name = data.azurerm_resource_group.project_rg.name
+  resource_group_name = data.azurerm_resource_group.network_rg.name
 }
 
 # ---------------------------------------------------------
