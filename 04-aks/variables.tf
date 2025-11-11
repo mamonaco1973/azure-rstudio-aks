@@ -90,24 +90,14 @@ variable "aks_group_name" {
   type        = string
   default     = "rstudio-aks-rg"
 }
-
-# ------------------------------------------------------------------------------------------
-# Ubuntu password for VM instances.
-# ------------------------------------------------------------------------------------------
-
-variable "ubuntu_password" {
-  description = "Password for the Ubuntu VM"
-  type        = string
-}
-
 # ------------------------------------------------------------------------------------------
 # Storage account for NFS
 # ------------------------------------------------------------------------------------------
 
-variable "nfs_storage_account" {
-  description = "Name of the NFS storage account"
-  type        = string
-}
+# variable "nfs_storage_account" {
+#   description = "Name of the NFS storage account"
+#   type        = string
+# }
 
 # ------------------------------------------------------------------------------------------
 # Input variable: Key Vault name
