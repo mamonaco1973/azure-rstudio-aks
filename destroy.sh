@@ -31,6 +31,20 @@ set -e  # Exit immediately if any command fails
 
 cd 04-aks
 
+RESOURCE_GROUP="rstudio-aks-rg"
+ACR_NAME=$(az acr list \
+  --resource-group "$RESOURCE_GROUP" \
+  --query "[?starts_with(name, 'rstudio')].name | [0]" \
+  --output tsv)
+
+if [ -z "$ACR_NAME" ] || [ "$ACR_NAME" = "null" ]; then
+  echo "ERROR: Failed to retrieve ACR name."
+else
+  echo "NOTE: Using ACR: $ACR_NAME"
+  az acr login --name "$ACR_NAME" > /dev/null  
+fi
+
+
 vault=$(az keyvault list \
    --resource-group rstudio-network-rg \
    --query "[?starts_with(name, 'ad-key-vault')].name | [0]" \
@@ -40,7 +54,8 @@ echo "NOTE: Using Key Vault: $vault"
 
 terraform init
 terraform destroy -var="vault_name=$vault" \
-                   -auto-approve
+                  -var="acr_name=$ACR_NAME" \
+                  -auto-approve
 
 cd ..
 
