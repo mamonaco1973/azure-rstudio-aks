@@ -91,7 +91,7 @@ cd 03-docker/rstudio
 # Dynamically find the ACR name that starts with 'rstudio'
 # ------------------------------------------------------------------------------
 
-ESOURCE_GROUP="rstudio-aks-rg"
+RESOURCE_GROUP="rstudio-aks-rg"
 ACR_NAME=$(az acr list \
   --resource-group "$RESOURCE_GROUP" \
   --query "[?starts_with(name, 'rstudio')].name | [0]" \
