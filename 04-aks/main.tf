@@ -67,3 +67,13 @@ data "azurerm_container_registry" "rstudio_acr" {
   # Used to grant ACR Pull permissions to AKS identity and to reference private image URIs.
 }
 
+# ---------------------------------------------------------
+# Subnet Lookup (for AKS Node Pool)
+# ---------------------------------------------------------
+data "azurerm_subnet" "aks_subnet" {
+  name                 = "vm-subnet"                                # Subnet that AKS will use for worker nodes
+  virtual_network_name = data.azurerm_virtual_network.aks_vnet.name # Ensure subnet is in the correct VNet
+  resource_group_name  = data.azurerm_resource_group.aks_rg.name
+  # Must be delegated to "Microsoft.ContainerService/managedClusters" if using Azure CNI
+}
+

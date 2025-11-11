@@ -41,7 +41,7 @@ resource "azurerm_federated_identity_credential" "keyvault_sa_binding" {
   name                = "keyvault-federated-cred"
   resource_group_name = data.azurerm_resource_group.aks_rg.name
   parent_id           = azurerm_user_assigned_identity.k8s_identity.id
-  issuer              = azurerm_kubernetes_cluster.main.oidc_issuer_url
+  issuer              = azurerm_kubernetes_cluster.rstudio_aks.oidc_issuer_url
   subject             = "system:serviceaccount:default:keyvault-access-sa"
   audience            = ["api://AzureADTokenExchange"]
 }
@@ -59,7 +59,7 @@ resource "azurerm_federated_identity_credential" "autoscaler" {
   resource_group_name = data.azurerm_resource_group.aks_rg.name        # Same RG as other components
   parent_id           = azurerm_user_assigned_identity.k8s_identity.id # Attach to the shared identity
 
-  issuer   = azurerm_kubernetes_cluster.flask_aks.oidc_issuer_url   # AKS cluster's OIDC issuer URL
+  issuer   = azurerm_kubernetes_cluster.rstudio_aks.oidc_issuer_url   # AKS cluster's OIDC issuer URL
   subject  = "system:serviceaccount:kube-system:cluster-autoscaler" # Kubernetes SA for the autoscaler workload
   audience = ["api://AzureADTokenExchange"]                         # Audience required for token validation in Azure
 }

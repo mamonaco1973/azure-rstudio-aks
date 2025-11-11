@@ -105,7 +105,7 @@ resource "kubernetes_service_account" "autoscaler" {
 # Lookup the AKS-Generated Node Resource Group
 # ---------------------------------------------------------
 data "azurerm_resource_group" "aks_node_rg" {
-  name = azurerm_kubernetes_cluster.flask_aks.node_resource_group
+  name = azurerm_kubernetes_cluster.rstudio_aks.node_resource_group
   # Dynamically resolves the special RG Azure creates for AKS agent resources (e.g., VMSS, NSGs, disks)
 }
 
