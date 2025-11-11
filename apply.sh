@@ -133,7 +133,7 @@ if az acr repository show-tags \
   --name "$ACR_NAME" \
   --repository "rstudio" \
   --query "[?@=='${IMAGE_TAG}']" \
-  --output tsv | grep -q "${IMAGE_TAG}"; then
+  --output tsv 2>/dev/null | grep -q "${IMAGE_TAG}"; then
   echo "INFO: Image ${FULL_IMAGE} already exists — skipping build."
 else
   echo "NOTE: Building and pushing image: ${FULL_IMAGE}"
