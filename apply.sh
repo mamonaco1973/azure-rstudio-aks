@@ -101,7 +101,7 @@ if [ -z "$ACR_NAME" ] || [ "$ACR_NAME" = "null" ]; then
   echo "ERROR: Failed to retrieve ACR name."
 else
   echo "NOTE: Using ACR: $ACR_NAME"
-  az acr login --name "$ACR_NAME"
+  az acr login --name "$ACR_NAME" > /dev/null  
 fi
 
 # ------------------------------------------------------------------------------
