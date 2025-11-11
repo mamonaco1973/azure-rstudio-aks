@@ -30,12 +30,12 @@ set -e  # Exit immediately if any command fails
 # ------------------------------------------------------------------------------
 # cd 04-aks
 
-# vault=$(az keyvault list \
-#   --resource-group rstudio-network-rg \
-#   --query "[?starts_with(name, 'ad-key-vault')].name | [0]" \
-#   --output tsv)
+vault=$(az keyvault list \
+   --resource-group rstudio-network-rg \
+   --query "[?starts_with(name, 'ad-key-vault')].name | [0]" \
+   --output tsv)
 
-# echo "NOTE: Using Key Vault: $vault"
+echo "NOTE: Using Key Vault: $vault"
 
 # rstudio_image_name=$(az image list \
 #   --resource-group rstudio-vmss-rg \
