@@ -119,7 +119,12 @@ if [ -z "$RSTUDIO_PASSWORD" ] || [ "$RSTUDIO_PASSWORD" = "null" ]; then
   exit 1
 fi
 
-docker build  --build-arg RSTUDIO_PASSWORD="${RSTUDIO_PASSWORD}"-t ${ACR_REPOSITORY}:${IMAGE_TAG} . --push
+docker build \
+  --build-arg RSTUDIO_PASSWORD="${RSTUDIO_PASSWORD}" \
+  -t ${ACR_REPOSITORY}:${IMAGE_TAG} \
+  .
+
+docker push ${ACR_REPOSITORY}:${IMAGE_TAG}
 
 cd ..
 cd ..
