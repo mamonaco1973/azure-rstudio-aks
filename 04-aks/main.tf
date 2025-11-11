@@ -40,16 +40,6 @@ data "azurerm_resource_group" "project_rg" {
 }
 
 # ------------------------------------------------------------------------------------------
-# Custom Image Lookup
-# - Existing managed image (used as VM source)
-# ------------------------------------------------------------------------------------------
-data "azurerm_image" "rstudio_image" {
-  name                = var.rstudio_image_name
-  resource_group_name = data.azurerm_resource_group.cluster_rg.name
-}
-
-
-# ------------------------------------------------------------------------------------------
 # Virtual Network Lookup
 # - Existing VNet where resources will be placed
 # ------------------------------------------------------------------------------------------
@@ -58,26 +48,7 @@ data "azurerm_virtual_network" "cluster_vnet" {
   resource_group_name = data.azurerm_resource_group.project_rg.name
 }
 
-
 # ------------------------------------------------------------------------------------------
-# Subnet Lookup
-# - Existing subnet within the target virtual network
-# ------------------------------------------------------------------------------------------
-data "azurerm_subnet" "cluster_subnet" {
-  name                 = var.subnet_name
-  virtual_network_name = data.azurerm_virtual_network.cluster_vnet.name
-  resource_group_name  = data.azurerm_resource_group.project_rg.name
-}
-
-# ------------------------------------------------------------------------------------------
-# Subnet Lookup
-# - Existing subnet within the target virtual network
-# ------------------------------------------------------------------------------------------
-data "azurerm_subnet" "app_gateway_subnet" {
-  name                 = "app-gateway-subnet"
-  virtual_network_name = data.azurerm_virtual_network.cluster_vnet.name
-  resource_group_name  = data.azurerm_resource_group.project_rg.name
-}
 
 # ------------------------------------------------------------------------------------------
 # Key Vault Lookup

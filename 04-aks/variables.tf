@@ -53,16 +53,6 @@ variable "user_base_dn" {
 
 
 # ------------------------------------------------------------------------------------------
-# Custom RStudio Image Name
-# - Human-readable identifier for the custom VM image
-# - Typically passed in via CLI, tfvars file, or environment variable
-# ------------------------------------------------------------------------------------------
-variable "rstudio_image_name" {
-  description = "Name of the RStudio custom image"
-  type        = string
-}
-
-
 # ------------------------------------------------------------------------------------------
 # Networking: Virtual Network and Subnet
 # - Defaults match values previously hardcoded in templates
@@ -70,7 +60,7 @@ variable "rstudio_image_name" {
 variable "vnet_name" {
   description = "Name of the existing virtual network"
   type        = string
-  default     = "ad-vnet"
+  default     = "aks-vnet"
 }
 
 variable "subnet_name" {
