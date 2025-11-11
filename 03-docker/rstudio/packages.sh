@@ -14,15 +14,15 @@ export DEBIAN_FRONTEND=noninteractive
 #   - NSS/PAM integration: libnss-sss, libpam-sss, winbind, libpam-winbind, libnss-winbind
 #   - Samba file services: samba, samba-common-bin, samba-libs
 #   - Home directory automation: oddjob, oddjob-mkhomedir
-#   - Utilities: less, unzip, nano, vim, nfs-common, stunnel4
+#   - Utilities: less, unzip, nano, vim, nfs-common, stunnel4, jq
 
 echo "=== Phase 1: Base utilities and AD join tools ==="  
 
 apt-get install -y less unzip realmd sssd-ad sssd-tools libnss-sss \
     libpam-sss adcli samba-common-bin samba-libs oddjob \
     oddjob-mkhomedir packagekit krb5-user nano vim stunnel4 \
-    nfs-common  
-
+    nfs-common curl sudo passwd adduser wget jq pamtester
+ 
 echo "=== Phase 2: Core build chain for R ==="  
 apt-get install -y build-essential gfortran python3-pip \
     libxml2-dev libcurl4-openssl-dev libssl-dev cmake
@@ -41,7 +41,7 @@ apt-get install -y libsqlite3-dev libpq-dev libmariadb-dev \
     libmariadb-dev-compat libudunits2-dev libgeos-dev libproj-dev  
 
 echo "=== Phase 6: Extra formats and science libs ==="  
-apt-get install -y libmagick++-dev libpoppler-cpp-dev \
+apt-get install -y libpoppler-cpp-dev \
     libhdf5-dev libnetcdf-dev default-jdk  
 
 # echo "=== Phase 7: LaTeX (optional, heavy) ==="  
@@ -52,7 +52,6 @@ echo "=== Phase 8: Clean up ==="
 apt-get autoremove -y  
 apt-get clean  
 
-echo "=== Userdata completed successfully ==="   
-
+echo "=== Userdata completed successfully ==="    
 
 

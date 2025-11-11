@@ -82,22 +82,47 @@ terraform apply -var="vault_name=$vault" -auto-approve
 cd ..
 
 # ------------------------------------------------------------------------------
-# Phase 3: Build RStudio Image with Packer
-# - Uses Packer to build custom Linux VM image with R + RStudio.
-# - Auth handled via Azure service principal credentials.
+# Phase 3: Build RStudio Container
 # ------------------------------------------------------------------------------
-# cd 03-packer
 
-# packer init .
-# packer build \
-#   -var="client_id=$ARM_CLIENT_ID" \
-#   -var="client_secret=$ARM_CLIENT_SECRET" \
-#   -var="subscription_id=$ARM_SUBSCRIPTION_ID" \
-#   -var="tenant_id=$ARM_TENANT_ID" \
-#   -var="resource_group=rstudio-vmss-rg" \
-#   rstudio_image.pkr.hcl
+cd 03-docker/rstudio
 
-# cd ..
+RESOURCE_GROUP="rstudio-aks-rg"
+
+# Dynamically find the ACR name that starts with 'rstudio'
+ACR_NAME=$(az acr list \
+  --resource-group $RESOURCE_GROUP \
+  --query "[?starts_with(name, 'rstudio')].name | [0]" \
+  --output tsv)
+
+if [ -z "$ACR_NAME" ] || [ "$ACR_NAME" = "null" ]; then
+  echo "ERROR: Failed to retrieve ACR name. Exiting."
+  exit 1
+fi
+
+echo "NOTE: Using ACR: $ACR_NAME"
+
+# Authenticate Docker to the ACR
+az acr login --name $ACR_NAME
+
+# Set full image path with tag
+ACR_REPOSITORY="${ACR_NAME}.azurecr.io/rstudio"
+IMAGE_TAG="rstudio-server-rc1"
+
+echo "NOTE: Building and pushing image: ${ACR_REPOSITORY}:${IMAGE_TAG}"
+
+secretsJson=$(az keyvault secret show --name rstudio-credentials --vault-name ${vault} --query value -o tsv)
+RSTUDIO_PASSWORD=$(echo "$secretsJson" | jq -r '.password')
+
+if [ -z "$RSTUDIO_PASSWORD" ] || [ "$RSTUDIO_PASSWORD" = "null" ]; then
+  echo "ERROR: Failed to retrieve RStudio password. Exiting."
+  exit 1
+fi
+
+docker build  --build-arg RSTUDIO_PASSWORD="${RSTUDIO_PASSWORD}"-t ${ACR_REPOSITORY}:${IMAGE_TAG} . --push
+
+cd ..
+cd ..
 
 # ------------------------------------------------------------------------------
 # Phase 4: Deploy RStudio Cluster (VM Scale Set)

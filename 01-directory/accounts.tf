@@ -116,6 +116,28 @@ resource "azurerm_key_vault_secret" "sysadmin_secret" {
 }
 
 # --------------------------------------------------------------------------------------------------
+# User: rstudio (local rstudio service account)
+# Purpose:
+#   - Generic rstudio service account for RStudio Server access.
+# --------------------------------------------------------------------------------------------------
+resource "random_password" "rstudio_password" {
+  length           = 24
+  special          = true
+  override_special = "!@#%"
+}
+
+resource "azurerm_key_vault_secret" "rstudio_secret" {
+  name = "rstudio-credentials"
+  value = jsonencode({
+    username = "rstudio"
+    password = random_password.rstudio_password.result
+  })
+  key_vault_id = azurerm_key_vault.ad_key_vault.id
+  depends_on   = [azurerm_role_assignment.kv_role_assignment]
+  content_type = "application/json"
+}
+
+# --------------------------------------------------------------------------------------------------
 # User: Admin (AD Domain Administrator)
 # Purpose:
 #   - Special account for AD domain administration.
@@ -124,7 +146,7 @@ resource "azurerm_key_vault_secret" "sysadmin_secret" {
 resource "random_password" "admin_password" {
   length           = 24
   special          = true
-  override_special = "-_." # Different set of allowed special characters
+  override_special = "_." # Different set of allowed special characters
 }
 
 resource "azurerm_key_vault_secret" "admin_secret" {
