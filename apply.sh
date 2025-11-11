@@ -87,44 +87,60 @@ cd ..
 
 cd 03-docker/rstudio
 
-RESOURCE_GROUP="rstudio-aks-rg"
-
+# ------------------------------------------------------------------------------
 # Dynamically find the ACR name that starts with 'rstudio'
+# ------------------------------------------------------------------------------
+
+ESOURCE_GROUP="rstudio-aks-rg"
 ACR_NAME=$(az acr list \
-  --resource-group $RESOURCE_GROUP \
+  --resource-group "$RESOURCE_GROUP" \
   --query "[?starts_with(name, 'rstudio')].name | [0]" \
   --output tsv)
 
 if [ -z "$ACR_NAME" ] || [ "$ACR_NAME" = "null" ]; then
-  echo "ERROR: Failed to retrieve ACR name. Exiting."
-  exit 1
+  echo "ERROR: Failed to retrieve ACR name."
+else
+  echo "NOTE: Using ACR: $ACR_NAME"
+  az acr login --name "$ACR_NAME"
 fi
 
-echo "NOTE: Using ACR: $ACR_NAME"
-
-# Authenticate Docker to the ACR
-az acr login --name $ACR_NAME
-
-# Set full image path with tag
+# ------------------------------------------------------------------------------
+# Set image repository and tag
+# ------------------------------------------------------------------------------
 ACR_REPOSITORY="${ACR_NAME}.azurecr.io/rstudio"
 IMAGE_TAG="rstudio-server-rc1"
+FULL_IMAGE="${ACR_REPOSITORY}:${IMAGE_TAG}"
 
-echo "NOTE: Building and pushing image: ${ACR_REPOSITORY}:${IMAGE_TAG}"
+# ------------------------------------------------------------------------------
+# Retrieve RStudio password from Key Vault
+# ------------------------------------------------------------------------------
+secretsJson=$(az keyvault secret show \
+  --name rstudio-credentials \
+  --vault-name "${VAULT_NAME}" \
+  --query value -o tsv)
 
-secretsJson=$(az keyvault secret show --name rstudio-credentials --vault-name ${vault} --query value -o tsv)
 RSTUDIO_PASSWORD=$(echo "$secretsJson" | jq -r '.password')
 
 if [ -z "$RSTUDIO_PASSWORD" ] || [ "$RSTUDIO_PASSWORD" = "null" ]; then
-  echo "ERROR: Failed to retrieve RStudio password. Exiting."
-  exit 1
+  echo "ERROR: Failed to retrieve RStudio password."
 fi
 
-docker build \
-  --build-arg RSTUDIO_PASSWORD="${RSTUDIO_PASSWORD}" \
-  -t ${ACR_REPOSITORY}:${IMAGE_TAG} \
-  .
-
-docker push ${ACR_REPOSITORY}:${IMAGE_TAG}
+# ------------------------------------------------------------------------------
+# Check if image already exists in ACR before building
+# ------------------------------------------------------------------------------
+if az acr repository show-tags \
+  --name "$ACR_NAME" \
+  --repository "rstudio" \
+  --query "[?@=='${IMAGE_TAG}']" \
+  --output tsv | grep -q "${IMAGE_TAG}"; then
+  echo "INFO: Image ${FULL_IMAGE} already exists — skipping build."
+else
+  echo "NOTE: Building and pushing image: ${FULL_IMAGE}"
+  docker build \
+    --build-arg RSTUDIO_PASSWORD="${RSTUDIO_PASSWORD}" \
+    -t "${FULL_IMAGE}" .
+  docker push "${FULL_IMAGE}"
+fi
 
 cd ..
 cd ..
