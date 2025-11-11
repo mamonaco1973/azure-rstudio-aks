@@ -110,6 +110,7 @@ fi
 ACR_REPOSITORY="${ACR_NAME}.azurecr.io/rstudio"
 IMAGE_TAG="rstudio-server-rc1"
 FULL_IMAGE="${ACR_REPOSITORY}:${IMAGE_TAG}"
+echo "NOTE: Full image name: ${FULL_IMAGE}"
 
 # ------------------------------------------------------------------------------
 # Retrieve RStudio password from Key Vault
