@@ -1,0 +1,18 @@
+controller:
+  publishService:
+    enabled: true
+
+  config:
+    use-regex: "true"
+    enable-rewrite-log: "true"
+
+  ingressClassResource:
+    default: true
+
+  watchIngressWithoutClass: true
+
+  service:
+    loadBalancerIP: "${ip_address}"  # Injected from Terraform
+    annotations:
+      service.beta.kubernetes.io/azure-load-balancer-resource-group: "${resource_group}"
+      service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: /auth-sign-in

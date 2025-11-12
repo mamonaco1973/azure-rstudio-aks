@@ -44,3 +44,98 @@ stringData:
 # - The values here are low sensitivity; credentials are stored in AWS Secrets Manager.
 # - Mounted as text files inside the container (not environment variables).
 ---
+# --- Headless Service for StatefulSet ----------------------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: rstudio
+  labels:
+    app: rstudio
+spec:
+  clusterIP: None
+  selector:
+    app: rstudio
+  ports:
+    - port: 8787
+      name: rstudio
+# Notes:
+# - Enables unique, stable hostnames like rstudio-0.rstudio.<namespace>.svc.
+# - Required for StatefulSet hostname resolution and AD compatibility.
+---
+# ==============================================================================
+# StatefulSet for RStudio Server Cluster on Azure AKS
+# ==============================================================================
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: rstudio
+  labels:
+    app: rstudio
+spec:
+  serviceName: "rstudio"
+  replicas: 2
+  selector:
+    matchLabels:
+      app: rstudio
+  template:
+    metadata:
+      labels:
+        app: rstudio
+    spec:
+      # ------------------------------------------------------------------------
+      # Service Account (optional)
+      # ------------------------------------------------------------------------
+      serviceAccountName: keyvault-access-sa
+
+      # ------------------------------------------------------------------------
+      # Container Specification
+      # ------------------------------------------------------------------------
+      containers:
+      - name: rstudio
+        image: rstudioozx6dp34.azurecr.io/rstudio:rstudio-server-rc1   # Injected at render time
+        ports:
+        - containerPort: 8787              # RStudio Server web interface port
+
+        # ----------------------------------------------------------------------
+        # Resource Requests & Limits
+        # ----------------------------------------------------------------------
+        resources:
+          requests:
+            cpu: "1200m"
+            memory: "2500Mi"
+          limits:
+            cpu: "2000m"
+            memory: "3500Mi"
+        # Notes:
+        # - Each Standard_D2s_v3 node fits one pod (2 vCPU, 4 GiB memory).
+        # - Autoscaling triggers near 60% average CPU usage.
+
+        # ----------------------------------------------------------------------
+        # Secret Volume Mount (Configuration)
+        # ----------------------------------------------------------------------
+        volumeMounts:
+        - name: rstudio-config-vol
+          mountPath: /etc/rstudio-config
+          readOnly: true
+
+        # ----------------------------------------------------------------------
+        # Azure Files NFS Volume Mount (Persistent Storage)
+        # ----------------------------------------------------------------------
+        - name: azurefiles-nfs-storage
+          mountPath: /nfs
+        - name: azurefiles-nfs-storage
+          mountPath: /home
+          subPath: home
+
+      # ------------------------------------------------------------------------
+      # Volumes
+      # ------------------------------------------------------------------------
+      volumes:
+      - name: rstudio-config-vol
+        secret:
+          secretName: rstudio-config
+          defaultMode: 0440
+
+      - name: azurefiles-nfs-storage
+        persistentVolumeClaim:
+          claimName: azurefiles-nfs-pvc
