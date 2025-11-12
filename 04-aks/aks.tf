@@ -62,6 +62,22 @@ resource "azurerm_kubernetes_cluster" "rstudio_aks" {
   }
 }
 
+# ================================================================================================
+# Role Assignment: Grant AKS Kubelet Pull Access to ACR
+# ================================================================================================
+resource "azurerm_role_assignment" "aks_acr_pull" {
+  scope                = data.azurerm_container_registry.rstudio_acr.id
+  role_definition_name = "AcrPull"
+  principal_id         = azurerm_kubernetes_cluster.rstudio_aks.kubelet_identity[0].object_id
+  skip_service_principal_aad_check = true
+  # ---------------------------------------------------------------------------------------------
+  # Key Points:
+  #  - This gives the AKS cluster’s node identity permission to pull images from the ACR.
+  #  - It replaces the CLI: az aks update --attach-acr.
+  #  - Ensures Terraform fully manages the permission and state.
+  # ---------------------------------------------------------------------------------------------
+}
+
 # ---------------------------------------------------------
 # Kubernetes Provider Configuration (for Terraform)
 # ---------------------------------------------------------

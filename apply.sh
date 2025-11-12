@@ -193,10 +193,6 @@ rm -rf ~/.kube  # Remove any existing kubeconfig
 az aks get-credentials \
   --resource-group rstudio-aks-rg \
   --name rstudio-aks
-az aks update \
-  --name rstudio-aks \
-  --resource-group rstudio-aks-rg \
-  --attach-acr $ACR_NAME > /dev/null
 
 kubectl apply -f rstudio-app.yaml || {
   echo "ERROR: Failed to apply rstudio-app.yaml. Exiting."
