@@ -108,9 +108,9 @@ spec:
       # Security Context for NFS Permissions
       # ------------------------------------------------------------------------
       securityContext:
-        fsGroup: 1000
-        runAsUser: 1000
-        runAsGroup: 1000
+        fsGroup: 10001
+        runAsUser: 10001
+        runAsGroup: 10001
 
       # ------------------------------------------------------------------------
       # Service Account (optional)
@@ -131,8 +131,8 @@ spec:
         # ----------------------------------------------------------------------
         resources:
           requests:
-            cpu: "1200m"
-            memory: "2500Mi"
+            cpu: "800m"
+            memory: "2000Mi"
           limits:
             cpu: "2000m"
             memory: "3500Mi"
