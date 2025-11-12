@@ -38,10 +38,7 @@ spec:
   storageClassName: azurefiles-nfs-sc
   csi:
     driver: file.csi.azure.com
-    volumeHandle: rstudio-nfs-pv-1        # Unique ID in cluster
-    volumeAttributes:
-      shareName: nfs                      # ONLY THIS — existing share name
-
+    volumeHandle: /subscriptions/e4dee2a9-14a7-42fd-a86f-11428698a6a3/resourceGroups/rstudio-servers-rg/providers/Microsoft.Storage/storageAccounts/nfsvhhfet/fileServices/default/shares/nfs
 ---
 # ==============================================================================
 # PersistentVolumeClaim - Binds to PV
