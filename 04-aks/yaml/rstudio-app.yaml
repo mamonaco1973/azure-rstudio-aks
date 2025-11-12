@@ -208,11 +208,7 @@ metadata:
 
     # --- Backend Protocol (HTTP) ---------------------------------------------
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
-
-    # --- Optional: Increase Proxy Timeout (good for long R jobs) -------------
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
-
+    
 spec:
   rules:
     - host: rstudio.mikecloud.com
