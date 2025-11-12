@@ -43,6 +43,7 @@ spec:
       storageAccount: nfsvhhfet
       shareName: nfs
       resourceGroup: rstudio-servers-rg   # ← THIS FIXES THE 403
+      protocol: nfs 
 ---
 # ==============================================================================
 # PersistentVolumeClaim - Binds to PV
