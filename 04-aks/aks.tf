@@ -106,15 +106,6 @@ resource "kubernetes_service_account" "autoscaler" {
     }
   }
 }
-# -------------------------------------------------------------------------------
-# Role Assignment: Allow AKS Kubelet identity to mount Azure Files (NFS)
-# -------------------------------------------------------------------------------
-resource "azurerm_role_assignment" "aks_kubelet_nfs_mount" {
-  scope                = data.azurerm_storage_account.nfs_storage.id
-  role_definition_name = "Storage File Data NFS Contributor"
-  principal_id         = azurerm_kubernetes_cluster.rstudio_aks.kubelet_identity[0].object_id
-}
-
 # ---------------------------------------------------------
 # Lookup the AKS-Generated Node Resource Group
 # ---------------------------------------------------------
