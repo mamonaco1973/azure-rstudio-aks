@@ -7,6 +7,29 @@
 #   - Looks up existing resources (resource group, custom image, network, subnet, key vault)
 # ==========================================================================================
 
+# ------------------------------------------------------------------------------------------
+# Provider version constraints (MUST be in a `terraform {}` block)
+# ------------------------------------------------------------------------------------------
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 3.0"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.0"
+    }
+    helm = {
+      source  = "hashicorp/helm"
+      version = ">= 2.0.0"          # <-- REQUIRED for the `kubernetes {}` block
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.0"
+    }
+  }
+}
 
 # ------------------------------------------------------------------------------------------
 # Azure Provider
