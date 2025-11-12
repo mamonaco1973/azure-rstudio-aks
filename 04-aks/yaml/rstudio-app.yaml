@@ -34,7 +34,7 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   csi:
     driver: file.csi.azure.com
-    volumeHandle: nfsvhhfhet#nfs
+    volumeHandle: nfsvhhfhet#nfs#nfs
     volumeAttributes:
       protocol: nfs
 ---
