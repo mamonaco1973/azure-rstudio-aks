@@ -5,6 +5,8 @@ apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   name: azurefiles-nfs-sc
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
 provisioner: file.csi.azure.com
 parameters:
   skuName: Standard_LRS       # Or Premium_LRS for higher performance
@@ -18,8 +20,6 @@ mountOptions:
 reclaimPolicy: Retain
 volumeBindingMode: Immediate
 allowVolumeExpansion: true
-annotations:
-  storageclass.kubernetes.io/is-default-class: "true"
 ---
 apiVersion: v1
 kind: PersistentVolume
@@ -211,7 +211,7 @@ metadata:
 
 spec:
   rules:
-      http:
+    - http:
         paths:
           - path: /
             pathType: Prefix
@@ -220,3 +220,4 @@ spec:
                 name: rstudio-external
                 port:
                   number: 8787
+
