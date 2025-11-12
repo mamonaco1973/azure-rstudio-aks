@@ -38,7 +38,7 @@ spec:
     volumeAttributes:
       protocol: nfs                       
       resourceGroup: rstudio-servers-rg       
-      storageAccount: nfsvhhfhet          
+      storageAccount: nfsvhhfet        
       shareName: nfs                    
 ---
 apiVersion: v1
