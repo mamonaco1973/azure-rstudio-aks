@@ -3,7 +3,7 @@
 # ---------------------------------------------------------
 provider "helm" {
   # Uses the same kubeconfig as the Kubernetes provider
-  kubernetes {
+  kubernetes = {
     host                   = azurerm_kubernetes_cluster.flask_aks.kube_config[0].host
     client_certificate     = base64decode(azurerm_kubernetes_cluster.flask_aks.kube_config[0].client_certificate)
     client_key             = base64decode(azurerm_kubernetes_cluster.flask_aks.kube_config[0].client_key)
