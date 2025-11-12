@@ -1,29 +1,23 @@
+
 # ==============================================================================
-# StorageClass for Azure Files (NFS protocol)
+# StorageClass for Azure Files (NFS Protocol)
 # ==============================================================================
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   name: azurefiles-nfs-sc
   annotations:
-    storageclass.kubernetes.io/is-default-class: "true"
+    storageclass.kubernetes.io/is-default-class: "false"
 provisioner: file.csi.azure.com
 parameters:
-  skuName: Standard_LRS       # Or Premium_LRS for higher performance
-  protocol: nfs               # Ensures NFS mode instead of SMB
-mountOptions:
-  - vers=4.1
-  - nconnect=8
-  - hard
-  - timeo=600
-  - retrans=2
+  skuName: Premium_LRS          # Required for NFS (Standard_LRS not supported)
+  protocol: nfs                 # Use NFS instead of SMB
 reclaimPolicy: Retain
 volumeBindingMode: Immediate
 allowVolumeExpansion: true
-
 ---
 # ==============================================================================
-# Static PersistentVolume - Binds to Existing Azure Files NFS Share
+# Static PersistentVolume - Existing Azure Files NFS Share
 # ==============================================================================
 apiVersion: v1
 kind: PersistentVolume
@@ -36,15 +30,22 @@ spec:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
   storageClassName: azurefiles-nfs-sc
+  mountOptions:
+    - vers=4.1
+    - nconnect=8
+    - hard
+    - timeo=600
+    - retrans=2
   csi:
     driver: file.csi.azure.com
-    volumeHandle: "rstudio-servers-rg#${storage_account}#nfs"  # ← REQUIRED FORMAT: {rg}#{account}#{share}
+    volumeHandle: "rstudio-servers-rg#${storage_account}#nfs"
     volumeAttributes:
       shareName: nfs
-      protocol: nfs  
+      storageAccount: ${storage_account}
+      protocol: nfs
 ---
 # ==============================================================================
-# PersistentVolumeClaim - Binds to PV
+# PersistentVolumeClaim for Azure Files NFS PV
 # ==============================================================================
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -54,10 +55,11 @@ spec:
   accessModes:
     - ReadWriteMany
   storageClassName: azurefiles-nfs-sc
+  volumeName: azurefiles-nfs-pv
   resources:
     requests:
       storage: 100Gi
----
+
 # --- Secret: RStudio Configuration -------------------------------------------
 apiVersion: v1
 kind: Secret
