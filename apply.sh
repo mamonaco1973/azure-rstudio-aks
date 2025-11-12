@@ -149,10 +149,26 @@ cd ../..
 #   - Mounts Azure Files via CSI driver for persistent home directories
 #   - Uses Key Vault secrets and ACR image built in previous phases
 # ------------------------------------------------------------------------------
+
+RG_NAME="rstudio-servers-rg"
+
+STORAGE_ACCOUNT=$(az storage account list \
+  --resource-group $RG_NAME \
+  --query "[?starts_with(name, 'nfs')].name | [0]" \
+  --output tsv)
+
+if [ -z "$STORAGE_ACCOUNT" ]; then
+  echo "ERROR: No storage account starting with 'nfs' found in RG $RG_NAME"
+  exit 1
+fi
+
+echo "Storage account: $STORAGE_ACCOUNT"
+
 cd 04-aks
 terraform init
 terraform apply -var="vault_name=$vault" \
                 -var="acr_name=$ACR_NAME" \
+                -var="storage_account=$STORAGE_ACCOUNT" \
                 -auto-approve
 cd ..
 echo "NOTE: Azure AKS RStudio cluster deployment completed successfully."
