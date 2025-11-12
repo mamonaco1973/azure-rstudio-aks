@@ -6,3 +6,4 @@
 *.pem
 ad_join.ps1
 users.json
+rstudio-app.yaml
