@@ -107,6 +107,12 @@ resource "kubernetes_service_account" "autoscaler" {
   }
 }
 
+resource "azurerm_role_assignment" "aks_kubelet_storage_keys" {
+  scope                = data.azurerm_storage_account.nfs_storage.id
+  role_definition_name = "Storage Account Contributor"
+  principal_id         = azurerm_kubernetes_cluster.rstudio_aks.kubelet_identity[0].object_id
+}
+
 # ---------------------------------------------------------
 # Lookup the AKS-Generated Node Resource Group
 # ---------------------------------------------------------

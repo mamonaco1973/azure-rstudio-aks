@@ -119,3 +119,12 @@ variable "acr_name" {
   # Used to resolve ACR metadata using the azurerm_container_registry data source.
   # Enables role assignment (e.g., acrpull) and dynamic container image referencing.
 }
+
+# ------------------------------------------------------------------------------------------
+# Input variable: Storage account name
+# ------------------------------------------------------------------------------------------
+
+variable "storage_account" {
+  description = "The name of the Azure Storage Account for NFS"
+  type        = string
+}

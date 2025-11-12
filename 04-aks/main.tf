@@ -100,3 +100,10 @@ data "azurerm_subnet" "aks_subnet" {
   # Must be delegated to "Microsoft.ContainerService/managedClusters" if using Azure CNI
 }
 
+# ================================================================================
+# Data: Resolve Storage Account by Name from Variable
+# ================================================================================
+data "azurerm_storage_account" "nfs_storage" {
+  name                = var.storage_account        # e.g., "nfsvhhfet"
+  resource_group_name = "rstudio-servers-rg"
+}
