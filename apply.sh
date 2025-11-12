@@ -162,7 +162,7 @@ if [ -z "$STORAGE_ACCOUNT" ]; then
   exit 1
 fi
 
-echo "Storage account: $STORAGE_ACCOUNT"
+echo "NOTE: Storage account: $STORAGE_ACCOUNT"
 
 cd 04-aks
 terraform init
