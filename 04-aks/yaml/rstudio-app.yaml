@@ -41,6 +41,7 @@ spec:
     volumeHandle: "rstudio-servers-rg#nfsvhhfet#nfs"  # ← REQUIRED FORMAT: {rg}#{account}#{share}
     volumeAttributes:
       shareName: nfs
+      protocol: nfs  
 ---
 # ==============================================================================
 # PersistentVolumeClaim - Binds to PV
