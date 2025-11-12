@@ -46,6 +46,13 @@ resource "azurerm_kubernetes_cluster" "rstudio_aks" {
   oidc_issuer_enabled       = true # Enables OIDC issuer URL on the cluster (required for federated identity)
   workload_identity_enabled = true # Enables Azure Workload Identity integration with Kubernetes service accounts
 
+  # ==============================================================================================
+  # Enable CSI drivers (incl. Azure Files) via storage_profile block
+  # ==============================================================================================
+  storage_profile {
+    file_driver_enabled         = true # Enables Azure Files CSI driver for dynamic volume provisioning
+  }
+
   # -------------------------------------------------------
   # Cluster Identity (User-Assigned Managed Identity)
   # -------------------------------------------------------
