@@ -19,7 +19,7 @@ resource "helm_release" "nginx_ingress" {
   namespace  = "ingress-nginx"
   repository = "https://kubernetes.github.io/ingress-nginx"
   chart      = "ingress-nginx"
-
+    
   create_namespace = true
   # Automatically creates the target namespace if it doesn't exist
 
