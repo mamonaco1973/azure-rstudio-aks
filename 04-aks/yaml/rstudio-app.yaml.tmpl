@@ -38,7 +38,7 @@ spec:
   storageClassName: azurefiles-nfs-sc
   csi:
     driver: file.csi.azure.com
-    volumeHandle: "rstudio-servers-rg#nfsvhhfet#nfs"  # ← REQUIRED FORMAT: {rg}#{account}#{share}
+    volumeHandle: "rstudio-servers-rg#${storage_account}#nfs"  # ← REQUIRED FORMAT: {rg}#{account}#{share}
     volumeAttributes:
       shareName: nfs
       protocol: nfs  
@@ -67,7 +67,7 @@ type: Opaque
 stringData:
   admin_secret: "admin-ad-credentials" 
   domain_fqdn: "rstudio.mikecloud.com"
-  vault_name: "ad-key-vault-2dwh3diu"
+  vault_name: "${vault_name}"
   netbios: "RSTUDIO"
 
 # Notes:
@@ -113,14 +113,6 @@ spec:
         app: rstudio
     spec:
       # ------------------------------------------------------------------------
-      # Security Context for NFS Permissions
-      # ------------------------------------------------------------------------
-      securityContext:
-        fsGroup: 10001
-        runAsUser: 10001
-        runAsGroup: 10001
-
-      # ------------------------------------------------------------------------
       # Service Account (optional)
       # ------------------------------------------------------------------------
       serviceAccountName: keyvault-access-sa
@@ -130,7 +122,7 @@ spec:
       # ------------------------------------------------------------------------
       containers:
       - name: rstudio
-        image: rstudioozx6dp34.azurecr.io/rstudio:rstudio-server-rc1
+        image: ${rstudio_image}
         ports:
         - containerPort: 8787
 
@@ -139,11 +131,11 @@ spec:
         # ----------------------------------------------------------------------
         resources:
           requests:
-            cpu: "800m"
-            memory: "2000Mi"
+            cpu: "500m"
+            memory: "1000Mi"
           limits:
             cpu: "2000m"
-            memory: "3500Mi"
+            memory: "3000Mi"
 
         # ----------------------------------------------------------------------
         # Health Probes (RStudio Sign-in Endpoint)

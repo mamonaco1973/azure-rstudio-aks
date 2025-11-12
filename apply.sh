@@ -170,6 +170,17 @@ terraform apply -var="vault_name=$vault" \
                 -var="acr_name=$ACR_NAME" \
                 -var="storage_account=$STORAGE_ACCOUNT" \
                 -auto-approve
+
+## Format YAML and apply it
+
+export rstudio_image="${FULL_IMAGE}"
+export vault_name="${vault}"
+
+envsubst < yaml/rstudio-app.yaml.tmpl > ../rstudio-app.yaml || {
+    echo "ERROR: Failed to generate Kubernetes deployment file. Exiting."
+    exit 1
+}
+
 cd ..
 echo "NOTE: Azure AKS RStudio cluster deployment completed successfully."
 
@@ -185,6 +196,11 @@ az aks update \
   --name rstudio-aks \
   --resource-group rstudio-aks-rg \
   --attach-acr $ACR_NAME > /dev/null
+
+kubectl apply -f rstudio-app.yaml || {
+  echo "ERROR: Failed to apply rstudio-app.yaml. Exiting."
+  exit 1
+}
 
 # ------------------------------------------------------------------------------
 # Validate final Kubernetes deployment and RStudio service availability
