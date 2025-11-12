@@ -40,10 +40,7 @@ spec:
     driver: file.csi.azure.com
     volumeHandle: 77a3d4e1-8f2c-4d1a-9b3e-5f6g7h8i9j0k  # ← Run `uuidgen` for real
     volumeAttributes:
-      storageAccount: nfsvhhfet
       shareName: nfs
-      resourceGroup: rstudio-servers-rg   # ← THIS FIXES THE 403
-      protocol: nfs 
 ---
 # ==============================================================================
 # PersistentVolumeClaim - Binds to PV
