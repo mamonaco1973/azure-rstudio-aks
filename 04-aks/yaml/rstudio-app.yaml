@@ -1,3 +1,25 @@
+# ==============================================================================
+# StorageClass for Azure Files (NFS protocol)
+# ==============================================================================
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: azurefiles-nfs-sc
+provisioner: file.csi.azure.com
+parameters:
+  skuName: Standard_LRS       # Or Premium_LRS for higher performance
+  protocol: nfs               # Ensures NFS mode instead of SMB
+mountOptions:
+  - vers=4.1
+  - nconnect=8
+  - hard
+  - timeo=600
+  - retrans=2
+reclaimPolicy: Retain
+volumeBindingMode: Immediate
+allowVolumeExpansion: true
+annotations:
+  storageclass.kubernetes.io/is-default-class: "true"
 ---
 apiVersion: v1
 kind: PersistentVolume
@@ -41,7 +63,7 @@ stringData:
   netbios: "RSTUDIO"
 
 # Notes:
-# - The values here are low sensitivity; credentials are stored in AWS Secrets Manager.
+# - The values here are low sensitivity; credentials are stored in an Azure Key Vault.
 # - Mounted as text files inside the container (not environment variables).
 ---
 # --- Headless Service for StatefulSet ----------------------------------------
@@ -83,6 +105,14 @@ spec:
         app: rstudio
     spec:
       # ------------------------------------------------------------------------
+      # Security Context for NFS Permissions
+      # ------------------------------------------------------------------------
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+        runAsGroup: 1000
+
+      # ------------------------------------------------------------------------
       # Service Account (optional)
       # ------------------------------------------------------------------------
       serviceAccountName: keyvault-access-sa
@@ -92,9 +122,9 @@ spec:
       # ------------------------------------------------------------------------
       containers:
       - name: rstudio
-        image: rstudioozx6dp34.azurecr.io/rstudio:rstudio-server-rc1   # Injected at render time
+        image: rstudioozx6dp34.azurecr.io/rstudio:rstudio-server-rc1
         ports:
-        - containerPort: 8787              # RStudio Server web interface port
+        - containerPort: 8787
 
         # ----------------------------------------------------------------------
         # Resource Requests & Limits
@@ -106,9 +136,27 @@ spec:
           limits:
             cpu: "2000m"
             memory: "3500Mi"
-        # Notes:
-        # - Each Standard_D2s_v3 node fits one pod (2 vCPU, 4 GiB memory).
-        # - Autoscaling triggers near 60% average CPU usage.
+
+        # ----------------------------------------------------------------------
+        # Health Probes (RStudio Sign-in Endpoint)
+        # ----------------------------------------------------------------------
+        readinessProbe:
+          httpGet:
+            path: /auth-sign-in
+            port: 8787
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+
+        livenessProbe:
+          httpGet:
+            path: /auth-sign-in
+            port: 8787
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
 
         # ----------------------------------------------------------------------
         # Secret Volume Mount (Configuration)
@@ -119,23 +167,61 @@ spec:
           readOnly: true
 
         # ----------------------------------------------------------------------
-        # Azure Files NFS Volume Mount (Persistent Storage)
+        # Azure Files NFS Volume Mounts
         # ----------------------------------------------------------------------
         - name: azurefiles-nfs-storage
           mountPath: /nfs
         - name: azurefiles-nfs-storage
           mountPath: /home
           subPath: home
+---
+# --- ClusterIP Service for External Access -------------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: rstudio-external
+  labels:
+    app: rstudio
+spec:
+  selector:
+    app: rstudio
+  ports:
+    - port: 8787
+      targetPort: 8787
+      name: rstudio
+---
+# ==============================================================================
+# Ingress Resource for RStudio Server (HTTP Load Balancer with Stickiness)
+# ==============================================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: rstudio-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
 
-      # ------------------------------------------------------------------------
-      # Volumes
-      # ------------------------------------------------------------------------
-      volumes:
-      - name: rstudio-config-vol
-        secret:
-          secretName: rstudio-config
-          defaultMode: 0440
+    # --- Enable Sticky Sessions ----------------------------------------------
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "rstudio_session"
+    nginx.ingress.kubernetes.io/session-cookie-hash: "sha1"
+    nginx.ingress.kubernetes.io/session-cookie-path: "/"
 
-      - name: azurefiles-nfs-storage
-        persistentVolumeClaim:
-          claimName: azurefiles-nfs-pvc
+    # --- Backend Protocol (HTTP) ---------------------------------------------
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+
+    # --- Optional: Increase Proxy Timeout (good for long R jobs) -------------
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+
+spec:
+  rules:
+    - host: rstudio.mikecloud.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: rstudio-external
+                port:
+                  number: 8787
