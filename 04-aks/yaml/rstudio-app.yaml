@@ -38,7 +38,10 @@ spec:
   storageClassName: azurefiles-nfs-sc
   csi:
     driver: file.csi.azure.com
-    volumeHandle: /subscriptions/e4dee2a9-14a7-42fd-a86f-11428698a6a3/resourceGroups/rstudio-servers-rg/providers/Microsoft.Storage/storageAccounts/nfsvhhfet/fileServices/default/shares/nfs
+    volumeHandle: 77a3d4e1-8f2c-4d1a-9b3e-5f6g7h8i9j0k  # ANY UUID (generate with `uuidgen`)
+    volumeAttributes:
+      storageAccount: nfsvhhfet
+      shareName: nfs
 ---
 # ==============================================================================
 # PersistentVolumeClaim - Binds to PV
