@@ -34,9 +34,12 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   csi:
     driver: file.csi.azure.com
-    volumeHandle: nfsvhhfhet#nfs#nfs
+    volumeHandle: rstudio-nfs-pv-1        # just a unique ID in the cluster
     volumeAttributes:
-      protocol: nfs
+      protocol: nfs                       
+      resourceGroup: rstudio-servers-rg       
+      storageAccount: nfsvhhfhet          
+      shareName: nfs                    
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -95,7 +98,7 @@ metadata:
     app: rstudio
 spec:
   serviceName: "rstudio"
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: rstudio
