@@ -175,6 +175,7 @@ terraform apply -var="vault_name=$vault" \
 
 export rstudio_image="${FULL_IMAGE}"
 export vault_name="${vault}"
+export storage_account="${STORAGE_ACCOUNT}"
 
 envsubst < yaml/rstudio-app.yaml.tmpl > ../rstudio-app.yaml || {
     echo "ERROR: Failed to generate Kubernetes deployment file. Exiting."
