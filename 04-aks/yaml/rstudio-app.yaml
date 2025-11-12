@@ -20,7 +20,11 @@ mountOptions:
 reclaimPolicy: Retain
 volumeBindingMode: Immediate
 allowVolumeExpansion: true
+
 ---
+# ==============================================================================
+# Static PersistentVolume - Binds to Existing Azure Files NFS Share
+# ==============================================================================
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -30,18 +34,18 @@ spec:
     storage: 100Gi
   accessModes:
     - ReadWriteMany
-  storageClassName: azurefiles-nfs-sc
   persistentVolumeReclaimPolicy: Retain
+  storageClassName: azurefiles-nfs-sc
   csi:
     driver: file.csi.azure.com
-    volumeHandle: rstudio-nfs-pv-1        # just a unique ID in the cluster
+    volumeHandle: rstudio-nfs-pv-1        # Unique ID in cluster
     volumeAttributes:
-      protocol: nfs                       
-      resourceGroup: rstudio-servers-rg       
-      storageAccount: nfsvhhfet        
-      shareName: nfs
-      server: nfsvhhfet.file.core.windows.net                    
+      shareName: nfs                      # ONLY THIS — existing share name
+
 ---
+# ==============================================================================
+# PersistentVolumeClaim - Binds to PV
+# ==============================================================================
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
