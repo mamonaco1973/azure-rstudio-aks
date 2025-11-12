@@ -27,3 +27,20 @@ spec:
   resources:
     requests:
       storage: 100Gi
+---
+# --- Secret: RStudio Configuration -------------------------------------------
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rstudio-config
+type: Opaque
+stringData:
+  admin_secret: "admin-ad-credentials" 
+  domain_fqdn: "rstudio.mikecloud.com"
+  vault_name: "ad-key-vault-2dwh3diu"
+  netbios: "RSTUDIO"
+
+# Notes:
+# - The values here are low sensitivity; credentials are stored in AWS Secrets Manager.
+# - Mounted as text files inside the container (not environment variables).
+---
