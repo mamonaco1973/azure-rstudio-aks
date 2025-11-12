@@ -39,7 +39,8 @@ spec:
       protocol: nfs                       
       resourceGroup: rstudio-servers-rg       
       storageAccount: nfsvhhfet        
-      shareName: nfs                    
+      shareName: nfs
+      server: nfsvhhfet.file.core.windows.net                    
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
