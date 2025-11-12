@@ -208,10 +208,9 @@ metadata:
 
     # --- Backend Protocol (HTTP) ---------------------------------------------
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
-    
+
 spec:
   rules:
-    - host: rstudio.mikecloud.com
       http:
         paths:
           - path: /
