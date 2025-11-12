@@ -19,7 +19,7 @@ resource "helm_release" "nginx_ingress" {
   namespace  = "ingress-nginx"
   repository = "https://kubernetes.github.io/ingress-nginx"
   chart      = "ingress-nginx"
-    
+
   create_namespace = true
   # Automatically creates the target namespace if it doesn't exist
 
@@ -30,8 +30,8 @@ resource "helm_release" "nginx_ingress" {
     })
   ]
 
-  depends_on = [ azurerm_public_ip.nginx_ingress_ip,
-                 azurerm_kubernetes_cluster.rstudio_aks ]
+  depends_on = [azurerm_public_ip.nginx_ingress_ip,
+  azurerm_kubernetes_cluster.rstudio_aks]
 }
 
 # ---------------------------------------------------------
@@ -39,16 +39,16 @@ resource "helm_release" "nginx_ingress" {
 # ---------------------------------------------------------
 
 resource "random_string" "ip_suffix" {
-  length  = 6         # Generates an 6-character string
-  special = false     # Excludes special characters (e.g., !@#)
-  upper   = false     # Lowercase only t
+  length  = 6     # Generates an 6-character string
+  special = false # Excludes special characters (e.g., !@#)
+  upper   = false # Lowercase only t
 }
 
 resource "azurerm_public_ip" "nginx_ingress_ip" {
   name                = "nginx-ingress-ip"
-  location            = data.azurerm_resource_group.aks_rg.location  # Use the same region as the target resource group
-  resource_group_name = data.azurerm_resource_group.aks_rg.name      # Reference the existing resource group
+  location            = data.azurerm_resource_group.aks_rg.location # Use the same region as the target resource group
+  resource_group_name = data.azurerm_resource_group.aks_rg.name     # Reference the existing resource group
   allocation_method   = "Static"
   sku                 = "Standard"
-  domain_name_label   = "k8s${random_string.ip_suffix.result}"  
+  domain_name_label   = "k8s${random_string.ip_suffix.result}"
 }

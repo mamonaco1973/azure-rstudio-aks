@@ -11,13 +11,12 @@ resource "azurerm_kubernetes_cluster" "rstudio_aks" {
   # Default Node Pool Configuration
   # -------------------------------------------------------
   default_node_pool {
-    name                   = "default"         # Name of the system node pool
-    min_count              = 1                 # Minimum node count for autoscaler
-    max_count              = 3                 # Maximum node count for autoscaler
-    vm_size                = "Standard_D2s_v3" # VM size used for the nodes
-    enable_auto_scaling    = true              # Enable cluster autoscaler
-    vnet_subnet_id         = data.azurerm_subnet.aks_subnet.id
-
+    name                = "default"         # Name of the system node pool
+    min_count           = 1                 # Minimum node count for autoscaler
+    max_count           = 3                 # Maximum node count for autoscaler
+    vm_size             = "Standard_D2s_v3" # VM size used for the nodes
+    enable_auto_scaling = true              # Enable cluster autoscaler
+    vnet_subnet_id      = data.azurerm_subnet.aks_subnet.id
 
     # Upgrade strategy for safer and faster rolling upgrades
     upgrade_settings {

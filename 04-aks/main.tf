@@ -22,7 +22,7 @@ terraform {
     }
     helm = {
       source  = "hashicorp/helm"
-      version = ">= 2.0.0"          # <-- REQUIRED for the `kubernetes {}` block
+      version = ">= 2.0.0" # <-- REQUIRED for the `kubernetes {}` block
     }
     random = {
       source  = "hashicorp/random"
