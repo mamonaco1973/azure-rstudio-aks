@@ -32,7 +32,7 @@ resource "azurerm_storage_account" "scripts_storage" {
 resource "azurerm_storage_container" "scripts" {
   name                  = "scripts"
   storage_account_id    = azurerm_storage_account.scripts_storage.id
-  container_access_type = "private" # No anonymous access
+  container_access_type = "private"  # No anonymous access
 }
 
 # --------------------------------------------------------------------------------------------------

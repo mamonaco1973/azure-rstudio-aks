@@ -27,6 +27,7 @@ resource "azurerm_storage_account" "nfs_storage_account" {
   account_tier                  = "Premium"     # Required for NFS support
   account_replication_type      = "LRS"         # Locally-redundant replication
   public_network_access_enabled = false         # Block public endpoint access
+  https_traffic_only_enabled    = false         # NFS requires non-HTTPS access
 }
 
 # ================================================================================================
