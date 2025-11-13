@@ -17,7 +17,7 @@ resource "azurerm_kubernetes_cluster" "rstudio_aks" {
     vm_size             = "Standard_D2s_v3" # VM size used for the nodes
     enable_auto_scaling = true              # Enable cluster autoscaler
     vnet_subnet_id      = data.azurerm_subnet.aks_subnet.id
-
+  
     # Upgrade strategy for safer and faster rolling upgrades
     upgrade_settings {
       drain_timeout_in_minutes      = 0     # Graceful pod drain wait time is zero (aggressive drain)

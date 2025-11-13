@@ -96,6 +96,18 @@ resource "azurerm_network_security_group" "vm_nsg" {
     destination_address_prefix = "*"
   }
 
+    security_rule {
+    name                       = "Allow-NFS"
+    priority                   = 1005
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "2049"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
   # Outbound Rules
   security_rule {
     name                       = "Allow-All-Internet-Outbound"
@@ -121,7 +133,7 @@ resource "azurerm_subnet" "vm_subnet" {
   virtual_network_name          = azurerm_virtual_network.aks_vnet.name
   address_prefixes              = ["10.240.0.0/24"]   
   default_outbound_access_enabled = false
-
+  service_endpoints = ["Microsoft.Storage"]
   depends_on = [azurerm_virtual_network.aks_vnet]
 }
 
