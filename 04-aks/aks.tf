@@ -120,7 +120,9 @@ resource "kubernetes_service_account" "autoscaler" {
 
     annotations = {
       # Bind to the same managed identity for workload identity access
+      "azure.workload.identity/use"      = "true"
       "azure.workload.identity/client-id" = azurerm_user_assigned_identity.k8s_identity.client_id
+      "azure.workload.identity/tenant-id" = data.azurerm_client_config.current.tenant_id
     }
   }
 }
