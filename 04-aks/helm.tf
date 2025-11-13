@@ -52,3 +52,24 @@ resource "azurerm_public_ip" "nginx_ingress_ip" {
   sku                 = "Standard"
   domain_name_label   = "k8s${random_string.ip_suffix.result}"
 }
+
+# ---------------------------------------------------------
+# Azure Workload Identity Webhook (Helm Chart)
+# ---------------------------------------------------------
+resource "helm_release" "azure_workload_identity" {
+  name       = "workload-identity-webhook"
+  repository = "https://azure.github.io/azure-workload-identity/charts"
+  chart      = "workload-identity-webhook"
+  namespace  = "kube-system"
+
+  # Pass the required tenant ID to the chart
+  values = [
+    yamlencode({
+      azureTenantID = data.azurerm_client_config.current.tenant_id
+    })
+  ]
+
+  depends_on = [
+    azurerm_kubernetes_cluster.rstudio_aks
+  ]
+}
