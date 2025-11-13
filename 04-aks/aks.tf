@@ -110,19 +110,6 @@ resource "kubernetes_service_account" "keyvault_access" {
   }
 }
 
-resource "azurerm_federated_identity_credential" "keyvault_fic" {
-  name                = "keyvault-access-fic"
-  resource_group_name = data.azurerm_resource_group.aks_rg.name
-  parent_id           = azurerm_user_assigned_identity.k8s_identity.id
-
-  audience = [
-    "api://AzureADTokenExchange"
-  ]
-
-  issuer  = azurerm_kubernetes_cluster.rstudio_aks.oidc_issuer_url
-  subject = "system:serviceaccount:default:keyvault-access-sa"
-}
-
 # ---------------------------------------------------------
 # Service Account for Cluster Autoscaler
 # ---------------------------------------------------------
