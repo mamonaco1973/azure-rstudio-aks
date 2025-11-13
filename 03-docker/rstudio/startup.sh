@@ -63,7 +63,7 @@ secretsJson=$(az keyvault secret show \
   --vault-name ${vault_name} \
   --query value -o tsv)
 admin_password=$(echo "$secretsJson" | jq -r '.password')
-admin_username="${netbios}\\Admin"
+admin_username="Admin"
 
 # ==============================================================================
 # Join Active Directory Domain
