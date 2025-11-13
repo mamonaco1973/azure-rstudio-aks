@@ -12,6 +12,7 @@ provisioner: file.csi.azure.com
 parameters:
   skuName: Premium_LRS          # Required for NFS (Standard_LRS not supported)
   protocol: nfs                 # Use NFS instead of SMB
+  encryptInTransit: "true"      # Forces CSI to use aznfs mount helper
 reclaimPolicy: Retain
 volumeBindingMode: Immediate
 allowVolumeExpansion: true

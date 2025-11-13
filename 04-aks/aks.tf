@@ -6,6 +6,7 @@ resource "azurerm_kubernetes_cluster" "rstudio_aks" {
   location            = data.azurerm_resource_group.aks_rg.location # Use the same region as the target resource group
   resource_group_name = data.azurerm_resource_group.aks_rg.name     # Reference the existing resource group
   dns_prefix          = "rstudio"                                   # Used to create the public FQDN for the AKS API server
+  kubernetes_version  = "1.33.5"                                    # Specify the Kubernetes version for the cluster
 
   # -------------------------------------------------------
   # Default Node Pool Configuration
