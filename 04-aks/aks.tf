@@ -103,10 +103,24 @@ resource "kubernetes_service_account" "keyvault_access" {
     namespace = "default"            # Namespace where this SA is created
 
     annotations = {
-      # Binds the SA to the AKS managed identity for token exchange
+      "azure.workload.identity/use"      = "true"
       "azure.workload.identity/client-id" = azurerm_user_assigned_identity.k8s_identity.client_id
+      "azure.workload.identity/tenant-id" = data.azurerm_client_config.current.tenant_id
     }
   }
+}
+
+resource "azurerm_federated_identity_credential" "keyvault_fic" {
+  name                = "keyvault-access-fic"
+  resource_group_name = azurerm_resource_group.aks_rg.name
+  parent_id           = azurerm_user_assigned_identity.k8s_identity.id
+
+  audience = [
+    "api://AzureADTokenExchange"
+  ]
+
+  issuer  = azurerm_kubernetes_cluster.rstudio_aks.oidc_issuer_url
+  subject = "system:serviceaccount:default:keyvault-access-sa"
 }
 
 # ---------------------------------------------------------
