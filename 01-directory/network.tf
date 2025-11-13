@@ -108,6 +108,18 @@ resource "azurerm_network_security_group" "vm_nsg" {
     destination_address_prefix = "*"
   }
 
+  security_rule {
+    name                       = "Allow-HTTP"
+    priority                   = 1006
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "80"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
   # Outbound Rules
   security_rule {
     name                       = "Allow-All-Internet-Outbound"
@@ -154,20 +166,10 @@ resource "azurerm_subnet" "bastion_subnet" {
   resource_group_name  = azurerm_resource_group.ad.name
   virtual_network_name = azurerm_virtual_network.aks_vnet.name
   address_prefixes     = ["10.240.2.0/24"]
+  default_outbound_access_enabled = false
 
   depends_on = [azurerm_subnet.mini_ad_subnet]
 }
-
-# App Gateway Subnet
-resource "azurerm_subnet" "app_gateway_subnet" {
-  name                 = "app-gateway-subnet"
-  resource_group_name  = azurerm_resource_group.ad.name
-  virtual_network_name = azurerm_virtual_network.aks_vnet.name
-  address_prefixes     = ["10.240.3.0/24"]
-
-  depends_on = [azurerm_subnet.bastion_subnet]
-}
-
 # --------------------------------------------------------------------------------------------------
 # Associations (serialized per subnet)
 # --------------------------------------------------------------------------------------------------
@@ -201,63 +203,4 @@ resource "azurerm_subnet_nat_gateway_association" "mini_ad_nat_assoc" {
     azurerm_nat_gateway_public_ip_association.nat_gw_pip_assoc
   ]
 }
-
-# --------------------------------------------------------------------------------------------------
-# Network Security Group for Application Gateway Subnet
-# --------------------------------------------------------------------------------------------------
-resource "azurerm_network_security_group" "rstudio_gateway_nsg" {
-  name                = "rstudio-gateway-nsg"
-  location            = azurerm_resource_group.ad.location
-  resource_group_name = azurerm_resource_group.ad.name
-
-  # Inbound Rules
-  security_rule {
-    name                       = "Allow-HTTP"
-    priority                   = 1002
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "80"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-
-  security_rule {
-    name                       = "Allow-AppGateway-Ports"
-    priority                   = 1003
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_ranges    = ["65200-65535"]
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-
-  # Outbound Rules
-  security_rule {
-    name                       = "Allow-All-Internet-Outbound"
-    priority                   = 2001
-    direction                  = "Outbound"
-    access                     = "Allow"
-    protocol                   = "*"
-    source_port_range          = "*"
-    destination_port_range     = "*"
-    source_address_prefix      = "*"
-    destination_address_prefix = "Internet"
-  }
-}
-
-# NSG association -> App Gateway subnet (after Bastion host & subnet)
-resource "azurerm_subnet_network_security_group_association" "app_gateway_nsg_assoc" {
-  subnet_id                 = azurerm_subnet.app_gateway_subnet.id
-  network_security_group_id = azurerm_network_security_group.rstudio_gateway_nsg.id
-
-  depends_on = [
-    azurerm_subnet.app_gateway_subnet,
-    azurerm_bastion_host.bastion_host
-  ]
-}
-
 

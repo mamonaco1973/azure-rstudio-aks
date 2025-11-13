@@ -222,6 +222,7 @@ metadata:
 
     # --- Backend Protocol (HTTP) ---------------------------------------------
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    nginx.ingress.kubernetes.io/rewrite-target: /
 
 spec:
   ingressClassName: nginx
