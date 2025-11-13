@@ -50,7 +50,14 @@ dbus-daemon --system --fork
 #   { "username": "MCLOUD\\Admin", "password": "SuperSecurePass123" }
 # ==============================================================================
 log INFO "Retrieving AD join credentials from Vault..."
-az login --identity --allow-no-subscriptions
+
+az login \
+  --federated-token "$(cat $AZURE_FEDERATED_TOKEN_FILE)" \
+  --service-principal \
+  --username "$AZURE_CLIENT_ID" \
+  --tenant "$AZURE_TENANT_ID" \
+  --allow-no-subscriptions
+
 secretsJson=$(az keyvault secret show \
   --name ${admin_secret} \
   --vault-name ${vault_name} \
