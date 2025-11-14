@@ -3,7 +3,7 @@
 echo "NOTE: Validating that required commands are found in your PATH."
 
 # List of required commands
-commands=("az" "terraform" "docker" "jq")
+commands=("az" "terraform" "docker" "kubectl" "jq")
 
 # Flag to track if all commands are found
 all_found=true
