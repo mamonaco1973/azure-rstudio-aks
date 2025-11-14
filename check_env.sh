@@ -62,3 +62,43 @@ else
   echo "NOTE: Successfully logged into Azure."
 fi
 
+# ---------------------------------------------------------
+# Ensure Microsoft.App Resource Provider is Registered
+# ---------------------------------------------------------
+
+echo "NOTE: Registering 'Microsoft.App' resource provider..."
+
+az provider register --namespace Microsoft.App &>/dev/null
+
+# Wait until registration is confirmed
+until [[ "$(az provider show --namespace Microsoft.App --query "registrationState" -o tsv)" == "Registered" ]]; do
+  echo "NOTE: Waiting for 'Microsoft.App' to register..."
+  sleep 10
+done
+
+echo "NOTE: 'Microsoft.App' is registered."
+
+# ---------------------------------------------------------
+# Validate Role Assignment
+# ---------------------------------------------------------
+
+echo "NOTE: Checking for 'User Access Administrator' role assignment..."
+
+ASSIGNEE=$(az account show --query "user.name" -o tsv)
+
+if [ -z "$ASSIGNEE" ]; then
+  echo "ERROR: Failed to retrieve the current user or service principal."
+  exit 1
+fi
+
+ROLE_ASSIGNED=$(az role assignment list \
+  --assignee "$ASSIGNEE" \
+  --query "[?roleDefinitionName=='User Access Administrator']" \
+  -o tsv)
+
+if [ -z "$ROLE_ASSIGNED" ]; then
+  echo "ERROR: 'User Access Administrator' role is NOT assigned to '$ASSIGNEE'."
+  exit 1
+fi
+
+echo "NOTE: 'User Access Administrator' role is assigned to '$ASSIGNEE'."
