@@ -10,6 +10,7 @@ It uses **Terraform**, **Docker**, **Helm**, and **Kubernetes manifests** to cre
 - **Azure Files NFS shares** for persistent, shared storage  
 - **Azure Workload Identity + Key Vault** for secure, secretless pod-level authentication  
 - **Azure Container Registry (ACR)** for hosting the custom RStudio Server image  
+- A **template-driven Kubernetes manifest (`rstudio-app.yaml`)** which is rendered by Terraform and deployed via `kubectl` to provision the RStudio StatefulSet, PersistentVolume, PersistentVolumeClaim, Service, and Ingress
 
 Unlike VM-based scaling groups, this solution deploys **containerized RStudio Server pods** on AKS that join the domain at runtime and mount **NFS volumes** for user home directories, project data, and shared R library storage.
 
@@ -19,11 +20,12 @@ Key capabilities demonstrated:
 2. **Active Directory Authentication** – Pods authenticate against a Samba-based Active Directory domain, providing centralized and consistent user identity management.  
 3. **Azure Files NFS Persistent Storage** – User home folders and shared R package libraries live on Azure Files (Premium, NFS v4), ensuring cross-pod consistency and reproducible environments.  
 4. **NGINX Ingress with Public IP** – Provides external HTTPS access, session affinity, customizable routing, and native Azure Load Balancer integration.  
-5. **End-to-End Infrastructure as Code** – Terraform builds the AD, networking, Key Vault, NFS storage, ACR, AKS cluster, workload identities, and ingress; Docker builds the RStudio image; Kubernetes + Helm deploy the full runtime stack.
+5. **End-to-End Infrastructure as Code** – Terraform builds the AD, networking, Key Vault, NFS storage, ACR, AKS cluster, workload identities, and ingress; Docker builds the RStudio image; the **Terraform-rendered `rstudio-app.yaml` manifest is applied with `kubectl`** to deploy the full RStudio workload.
 
 Together, these components form a scalable, domain-aware analytics platform where RStudio users share packages, data, and authentication seamlessly across a fully managed Azure Kubernetes environment.
 
 ![diagram](azure-rstudio-aks.png)
+
 
 ## Prerequisites
 
