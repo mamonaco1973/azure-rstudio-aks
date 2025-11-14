@@ -6,7 +6,7 @@ resource "azurerm_kubernetes_cluster" "rstudio_aks" {
   location            = data.azurerm_resource_group.aks_rg.location # Use the same region as the target resource group
   resource_group_name = data.azurerm_resource_group.aks_rg.name     # Reference the existing resource group
   dns_prefix          = "rstudio"                                   # Used to create the public FQDN for the AKS API server
-  kubernetes_version  = "1.33.5"                                    # Specify the Kubernetes version for the cluster
+  #kubernetes_version  = "1.33.5"                                   # Specify the Kubernetes version for the cluster
 
   # -------------------------------------------------------
   # Default Node Pool Configuration
@@ -14,7 +14,7 @@ resource "azurerm_kubernetes_cluster" "rstudio_aks" {
   default_node_pool {
     name                = "default"         # Name of the system node pool
     min_count           = 1                 # Minimum node count for autoscaler
-    max_count           = 3                 # Maximum node count for autoscaler
+    max_count           = 4                 # Maximum node count for autoscaler
     vm_size             = "Standard_D2s_v3" # VM size used for the nodes
     enable_auto_scaling = true              # Enable cluster autoscaler
     vnet_subnet_id      = data.azurerm_subnet.aks_subnet.id

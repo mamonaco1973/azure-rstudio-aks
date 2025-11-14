@@ -225,4 +225,30 @@ spec:
                 name: rstudio-external
                 port:
                   number: 8787
-
+---
+# --- Horizontal Pod Autoscaler (CPU-Based Scaling) ----------------------------
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: rstudio-hpa
+  labels:
+    app: rstudio
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: StatefulSet
+    name: rstudio
+  minReplicas: 2
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+# Notes:
+# - HPA scales between 2–4 replicas based on CPU utilization.
+# - Cluster Autoscaler provisions nodes if required.
+# - StatefulSet ensures hostname stability and AD uniqueness.
+# ==============================================================================s
