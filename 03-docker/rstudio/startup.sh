@@ -67,17 +67,20 @@ admin_username="Admin"
 
 # ==============================================================================
 # Join Active Directory Domain
-# ------------------------------------------------------------------------------
-# Create a unique machine name and perform noninteractive `realm join`.
 # ==============================================================================
-random_id=$(tr -dc 'a-z0-9' </dev/urandom | head -c 6)
-machine_name="rstudio-${random_id}"
-log INFO "Generated machine name: ${machine_name}"
+
+hostname_ad=$(hostname | tr '[:lower:]' '[:upper:]')
+
+ldapdelete \
+  -H ldap://ad1.rstudio.mikecloud.com:389 \
+  -D "CN=Admin,CN=Users,DC=rstudio,DC=mikecloud,DC=com" \
+  -w "$admin_password" \
+  "CN=${hostname_ad},CN=Computers,DC=rstudio,DC=mikecloud,DC=com"
+
 log INFO "Joining AD domain: ${domain_fqdn}..."
 if echo -e "${admin_password}" | sudo /usr/sbin/realm join \
     -U "${admin_username}" \
     "${domain_fqdn}" \
-    --computer-name="${machine_name}" \
     --verbose --install=/ ; then
   log INFO "Successfully joined domain: ${domain_fqdn}"
 else
@@ -101,10 +104,10 @@ sudo sed -i 's|fallback_homedir = /home/%u@%d|fallback_homedir = /home/%u|' \
 # ==============================================================================
 # Default User Environment Setup
 # ------------------------------------------------------------------------------
-# Configure /etc/skel and shared EFS mapping for new AD user homes.
+# Configure /etc/skel and shared NFS mapping for new AD user homes.
 # ==============================================================================
 log INFO "Preparing default user skeleton directory..."
-ln -s /efs /etc/skel/efs
+ln -s /nfs /etc/skel/nfs
 sudo sed -i 's/^\(\s*HOME_MODE\s*\)[0-9]\+/\10700/' /etc/login.defs
 touch /etc/skel/.Xauthority
 chmod 600 /etc/skel/.Xauthority
@@ -130,8 +133,8 @@ local({
   if (!dir.exists(userlib)) {
     dir.create(userlib, recursive = TRUE, showWarnings = FALSE)
   }
-  efs <- "/efs/rlibs"
-  .libPaths(c(userlib, efs, .libPaths()))
+  nfs <- "/nfs/rlibs"
+  .libPaths(c(userlib, nfs, .libPaths()))
 })
 EOF
 
