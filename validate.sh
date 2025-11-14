@@ -29,6 +29,9 @@ fi
 
 echo "NOTE: Waiting for Load Balancer endpoint (http://${DNS_NAME}) to return HTTP 200..."
 
+MAX_ATTEMPTS=30
+SLEEP_SECONDS=10
+
 for ((j=1; j<=MAX_ATTEMPTS; j++)); do
   STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://${DNS_NAME}/auth-sign-in")
 
