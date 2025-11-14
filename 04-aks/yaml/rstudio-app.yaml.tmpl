@@ -105,7 +105,7 @@ metadata:
     app: rstudio
 spec:
   serviceName: "rstudio"
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: rstudio
@@ -116,24 +116,35 @@ spec:
         azure.workload.identity/use: "true"
       annotations:
         azure.workload.identity/use: "true"
+
     spec:
-      # ------------------------------------------------------------------------
-      # Service Account (optional)
-      # ------------------------------------------------------------------------
+      # ----------------------------------------------------------------------
+      # Node/Pod Placement Rules
+      # ----------------------------------------------------------------------
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - rstudio
+              topologyKey: "kubernetes.io/hostname"
+
+      # ----------------------------------------------------------------------
+      # Service Account
+      # ----------------------------------------------------------------------
       serviceAccountName: keyvault-access-sa
 
-      # ------------------------------------------------------------------------
-      # Container Specification
-      # ------------------------------------------------------------------------
+      # ----------------------------------------------------------------------
+      # Containers
+      # ----------------------------------------------------------------------
       containers:
       - name: rstudio
         image: ${rstudio_image}
         ports:
         - containerPort: 8787
-
-        # ----------------------------------------------------------------------
-        # Resource Requests & Limits
-        # ----------------------------------------------------------------------
         resources:
           requests:
             cpu: "500m"
@@ -141,48 +152,26 @@ spec:
           limits:
             cpu: "2000m"
             memory: "3000Mi"
-
-        # ----------------------------------------------------------------------
-        # Health Probes (RStudio Sign-in Endpoint)
-        # ----------------------------------------------------------------------
         readinessProbe:
           httpGet:
             path: /auth-sign-in
             port: 8787
-          initialDelaySeconds: 20
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 6
-
         livenessProbe:
           httpGet:
             path: /auth-sign-in
             port: 8787
-          initialDelaySeconds: 60
-          periodSeconds: 30
-          timeoutSeconds: 5
-          failureThreshold: 3
-
-        # ----------------------------------------------------------------------
-        # Secret Volume Mount (Configuration)
-        # ----------------------------------------------------------------------
         volumeMounts:
         - name: rstudio-config-vol
           mountPath: /etc/rstudio-config
-          readOnly: true
-
-        # ----------------------------------------------------------------------
-        # Azure Files NFS Volume Mounts
-        # ----------------------------------------------------------------------
         - name: azurefiles-nfs-storage
           mountPath: /nfs
         - name: azurefiles-nfs-storage
           mountPath: /home
           subPath: home
 
-      # ------------------------------------------------------------------------
-      # Volumes (Secret + Azure Files PVC)
-      # ------------------------------------------------------------------------
+      # ----------------------------------------------------------------------
+      # Volumes
+      # ----------------------------------------------------------------------
       volumes:
         - name: rstudio-config-vol
           secret:
