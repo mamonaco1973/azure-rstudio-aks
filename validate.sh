@@ -6,6 +6,15 @@
 # #   - Outputs the RStudio Application URL when backends are ready.
 # # =========================================================================================
 
+DNS_NAME=$(az network public-ip show \
+  --resource-group rstudio-aks-rg \
+  --name nginx-ingress-ip \
+  --query "dnsSettings.fqdn" \
+  -o tsv)
+
+echo "$DNS_NAME"
+
+
 # # -------------------------------------
 # # Configurable variables
 # # -------------------------------------
