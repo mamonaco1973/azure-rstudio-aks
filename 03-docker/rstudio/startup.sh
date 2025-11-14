@@ -71,6 +71,8 @@ admin_username="Admin"
 
 hostname_ad=$(hostname | tr '[:lower:]' '[:upper:]')
 
+log INFO "Attempting to remove existing computer object: ${hostname_ad}"
+
 ldapdelete \
   -H ldap://ad1.rstudio.mikecloud.com:389 \
   -D "CN=Admin,CN=Users,DC=rstudio,DC=mikecloud,DC=com" \
