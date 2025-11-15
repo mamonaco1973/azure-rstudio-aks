@@ -117,7 +117,7 @@ When the deployment completes, the following resources are created:
 
 ### Kubernetes Components
 
-![diagram](k8s-diagram.png)
+![k8s diagram](k8s-diagram.png)
 
 
 ### Users and Groups  
