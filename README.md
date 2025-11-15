@@ -119,30 +119,7 @@ When the deployment completes, the following resources are created:
 
 ```mermaid
 classDiagram
-class StorageClass_default_azurefiles_nfs_sc {
-  +kind: StorageClass
-  +api_version: storage.k8s.io/v1
-  +name: azurefiles-nfs-sc
-  +namespace: default
-  +ports: []
-}
-class PersistentVolume_default_azurefiles_nfs_pv {
-  +kind: PersistentVolume
-  +api_version: v1
-  +name: azurefiles-nfs-pv
-  +namespace: default
-  +ports: []
-}
-class PersistentVolumeClaim_default_azurefiles_nfs_pvc {
-  +kind: PersistentVolumeClaim
-  +api_version: v1
-  +name: azurefiles-nfs-pvc
-  +namespace: default
-  +ports: []
-  +access_modes: ['ReadWriteMany']
-  +storage_class: azurefiles-nfs-sc
-  +storage_size: 100Gi
-}
+
 class Secret_default_rstudio_config {
   +kind: Secret
   +api_version: v1
