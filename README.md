@@ -117,58 +117,7 @@ When the deployment completes, the following resources are created:
 
 ### Kubernetes Components
 
-```mermaid
-classDiagram
-
-class Service_default_rstudio {
-  +kind: Service
-  +name: rstudio
-  +namespace: default
-  +ports: [(8787, 'TCP', None)]
-  +service_type: ClusterIP
-  +cluster_ip: None
-  +is_headless: ✓
-}
-class StatefulSet_default_rstudio {
-  +kind: StatefulSet
-  +name: rstudio
-  +namespace: default
-  +service_account_name: keyvault-access-sa
-  +image: rstudiogw1ni682.azurecr.io/rstudio:rstudio-serv...
-  +ports: []
-}
-class Service_default_rstudio_external {
-  +kind: Service
-  +name: rstudio-external
-  +namespace: default
-  +ports: [(8787, 'TCP', 8787)]
-  +service_type: ClusterIP
-  +is_headless: ✗
-}
-class Ingress_default_rstudio_ingress {
-  +kind: Ingress
-  +name: rstudio-ingress
-  +namespace: default
-  +ports: []
-}
-class HorizontalPodAutoscaler_default_rstudio_hpa {
-  +kind: HorizontalPodAutoscaler
-  +name: rstudio-hpa
-  +namespace: default
-  +ports: []
-  +min_replicas: 2
-  +max_replicas: 4
-}
-
-  %% Relationships
-Service_default_rstudio --> StatefulSet_default_rstudio : exposes_tcp_8787
-Service_default_rstudio --> Service_default_rstudio_external : exposes_tcp_8787
-Service_default_rstudio_external --> Service_default_rstudio : exposes_tcp_8787
-Service_default_rstudio_external --> StatefulSet_default_rstudio : exposes_tcp_8787
-Service_default_rstudio_external --> HorizontalPodAutoscaler_default_rstudio_hpa : exposes_tcp_8787
-Ingress_default_rstudio_ingress --> Service_default_rstudio_external : routes_to
-HorizontalPodAutoscaler_default_rstudio_hpa --> StatefulSet_default_rstudio : controls
-```
+![diagram](k8s-diagram.png)
 
 
 ### Users and Groups  
