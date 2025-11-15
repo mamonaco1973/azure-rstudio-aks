@@ -115,6 +115,103 @@ When the deployment completes, the following resources are created:
 - **Sample R Workloads:**  
   - Example R scripts (Monte Carlo, bell curve, surface plotting, etc.) included to validate the environment  
 
+### Kubernetes Components
+
+```mermaid
+classDiagram
+class StorageClass_default_azurefiles_nfs_sc {
+  +kind: StorageClass
+  +api_version: storage.k8s.io/v1
+  +name: azurefiles-nfs-sc
+  +namespace: default
+  +ports: []
+}
+class PersistentVolume_default_azurefiles_nfs_pv {
+  +kind: PersistentVolume
+  +api_version: v1
+  +name: azurefiles-nfs-pv
+  +namespace: default
+  +ports: []
+}
+class PersistentVolumeClaim_default_azurefiles_nfs_pvc {
+  +kind: PersistentVolumeClaim
+  +api_version: v1
+  +name: azurefiles-nfs-pvc
+  +namespace: default
+  +ports: []
+  +access_modes: ['ReadWriteMany']
+  +storage_class: azurefiles-nfs-sc
+  +storage_size: 100Gi
+}
+class Secret_default_rstudio_config {
+  +kind: Secret
+  +api_version: v1
+  +name: rstudio-config
+  +namespace: default
+  +ports: []
+  +data_keys: [4 items]
+  +secret_type: Opaque
+}
+class Service_default_rstudio {
+  +kind: Service
+  +api_version: v1
+  +name: rstudio
+  +namespace: default
+  +ports: [(8787, 'TCP', None)]
+  +service_type: ClusterIP
+  +cluster_ip: None
+  +is_headless: ✓
+}
+class StatefulSet_default_rstudio {
+  +kind: StatefulSet
+  +api_version: apps/v1
+  +name: rstudio
+  +namespace: default
+  +service_account_name: keyvault-access-sa
+  +image: rstudiogw1ni682.azurecr.io/rstudio:rstudio-serv...
+  +ports: []
+}
+class Service_default_rstudio_external {
+  +kind: Service
+  +api_version: v1
+  +name: rstudio-external
+  +namespace: default
+  +ports: [(8787, 'TCP', 8787)]
+  +service_type: ClusterIP
+  +is_headless: ✗
+}
+class Ingress_default_rstudio_ingress {
+  +kind: Ingress
+  +api_version: networking.k8s.io/v1
+  +name: rstudio-ingress
+  +namespace: default
+  +ports: []
+}
+class HorizontalPodAutoscaler_default_rstudio_hpa {
+  +kind: HorizontalPodAutoscaler
+  +api_version: autoscaling/v2
+  +name: rstudio-hpa
+  +namespace: default
+  +ports: []
+  +min_replicas: 2
+  +max_replicas: 4
+}
+
+  %% Relationships
+Service_default_rstudio --> Service_default_rstudio : exposes_tcp_8787
+Service_default_rstudio --> StatefulSet_default_rstudio : exposes_tcp_8787
+Service_default_rstudio --> Service_default_rstudio_external : exposes_tcp_8787
+Service_default_rstudio --> HorizontalPodAutoscaler_default_rstudio_hpa : exposes_tcp_8787
+StatefulSet_default_rstudio --> Secret_default_rstudio_config : mounts_secret
+Service_default_rstudio_external --> Service_default_rstudio : exposes_tcp_8787
+Service_default_rstudio_external --> StatefulSet_default_rstudio : exposes_tcp_8787
+Service_default_rstudio_external --> Service_default_rstudio_external : exposes_tcp_8787
+Service_default_rstudio_external --> HorizontalPodAutoscaler_default_rstudio_hpa : exposes_tcp_8787
+Ingress_default_rstudio_ingress --> Service_default_rstudio_external : routes_to
+HorizontalPodAutoscaler_default_rstudio_hpa --> StatefulSet_default_rstudio : controls
+```
+
+
 ### Users and Groups  
 
 The domain controller provisions **sample users and groups** via Terraform templates. These are intended for testing and demonstration.  
