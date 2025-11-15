@@ -120,15 +120,6 @@ When the deployment completes, the following resources are created:
 ```mermaid
 classDiagram
 
-class Secret_default_rstudio_config {
-  +kind: Secret
-  +api_version: v1
-  +name: rstudio-config
-  +namespace: default
-  +ports: []
-  +data_keys: [4 items]
-  +secret_type: Opaque
-}
 class Service_default_rstudio {
   +kind: Service
   +api_version: v1
@@ -179,7 +170,6 @@ Service_default_rstudio --> Service_default_rstudio : exposes_tcp_8787
 Service_default_rstudio --> StatefulSet_default_rstudio : exposes_tcp_8787
 Service_default_rstudio --> Service_default_rstudio_external : exposes_tcp_8787
 Service_default_rstudio --> HorizontalPodAutoscaler_default_rstudio_hpa : exposes_tcp_8787
-StatefulSet_default_rstudio --> Secret_default_rstudio_config : mounts_secret
 Service_default_rstudio_external --> Service_default_rstudio : exposes_tcp_8787
 Service_default_rstudio_external --> StatefulSet_default_rstudio : exposes_tcp_8787
 Service_default_rstudio_external --> Service_default_rstudio_external : exposes_tcp_8787
