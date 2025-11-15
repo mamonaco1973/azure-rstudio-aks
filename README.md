@@ -122,7 +122,6 @@ classDiagram
 
 class Service_default_rstudio {
   +kind: Service
-  +api_version: v1
   +name: rstudio
   +namespace: default
   +ports: [(8787, 'TCP', None)]
@@ -132,7 +131,6 @@ class Service_default_rstudio {
 }
 class StatefulSet_default_rstudio {
   +kind: StatefulSet
-  +api_version: apps/v1
   +name: rstudio
   +namespace: default
   +service_account_name: keyvault-access-sa
@@ -141,7 +139,6 @@ class StatefulSet_default_rstudio {
 }
 class Service_default_rstudio_external {
   +kind: Service
-  +api_version: v1
   +name: rstudio-external
   +namespace: default
   +ports: [(8787, 'TCP', 8787)]
@@ -150,14 +147,12 @@ class Service_default_rstudio_external {
 }
 class Ingress_default_rstudio_ingress {
   +kind: Ingress
-  +api_version: networking.k8s.io/v1
   +name: rstudio-ingress
   +namespace: default
   +ports: []
 }
 class HorizontalPodAutoscaler_default_rstudio_hpa {
   +kind: HorizontalPodAutoscaler
-  +api_version: autoscaling/v2
   +name: rstudio-hpa
   +namespace: default
   +ports: []
@@ -166,13 +161,10 @@ class HorizontalPodAutoscaler_default_rstudio_hpa {
 }
 
   %% Relationships
-Service_default_rstudio --> Service_default_rstudio : exposes_tcp_8787
 Service_default_rstudio --> StatefulSet_default_rstudio : exposes_tcp_8787
 Service_default_rstudio --> Service_default_rstudio_external : exposes_tcp_8787
-Service_default_rstudio --> HorizontalPodAutoscaler_default_rstudio_hpa : exposes_tcp_8787
 Service_default_rstudio_external --> Service_default_rstudio : exposes_tcp_8787
 Service_default_rstudio_external --> StatefulSet_default_rstudio : exposes_tcp_8787
-Service_default_rstudio_external --> Service_default_rstudio_external : exposes_tcp_8787
 Service_default_rstudio_external --> HorizontalPodAutoscaler_default_rstudio_hpa : exposes_tcp_8787
 Ingress_default_rstudio_ingress --> Service_default_rstudio_external : routes_to
 HorizontalPodAutoscaler_default_rstudio_hpa --> StatefulSet_default_rstudio : controls
