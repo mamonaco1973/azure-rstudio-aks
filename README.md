@@ -1,224 +1,165 @@
-# Azure RStudio Cluster on AKS with Active Directory and Azure Files (NFS) Integration
+# RStudio Server on Azure AKS: Kubernetes, Azure Files NFS and Active Directory
 
-This project builds on both the **Azure Mini Active Directory** and **RStudio VMSS Cluster** lab components to deliver a **cloud-native, domain-joined RStudio Server environment** running on **Azure Kubernetes Service (AKS)**.
+An **RStudio Server** cluster that runs as pods on **Azure Kubernetes
+Service**, built on the [Azure Mini Active Directory](https://github.com/mamonaco1973/azure-mini-ad)
+lab and the VM-based
+[azure-rstudio-cluster](https://github.com/mamonaco1973/azure-rstudio-cluster).
+An **NGINX ingress controller** on a static public IP spreads users across
+RStudio pods; each pod gets the AD join password from **Key Vault** through
+workload identity, joins a **mini-AD** domain when it starts, and mounts a
+Premium **Azure Files NFS** share for home directories and a shared R
+package library. A Windows VM and a Samba gateway, reached through **Azure
+Bastion**, give admins access to the same files.
 
-![RStudio](rstudio.png)  
+![RStudio Server](rstudio.png)
 
-It uses **Terraform**, **Docker**, **Helm**, and **Kubernetes manifests** to create a fully automated analytics platform that integrates with:
+| Piece | Where | Role |
+|---|---|---|
+| **aks-vnet** | `10.0.0.0/8` | `vm-subnet` (`10.240.0.0/24`, VMs and AKS nodes), `mini-ad-subnet` (`10.240.1.0/24`), `AzureBastionSubnet` (`10.240.2.0/24`); NAT gateway for outbound traffic |
+| **rstudio-aks** | `rstudio-aks-rg` | AKS on Azure CNI with a Standard load balancer; OIDC issuer and workload identity on; default pool `Standard_D2s_v3`, 1 to 4 nodes with the cluster autoscaler |
+| **NGINX ingress** | Helm, `ingress-nginx` | on a static public IP with DNS label `k8s<suffix>`; HTTP 80; cookie session affinity (`rstudio_session`); load balancer probe on `/auth-sign-in` |
+| **rstudio** | StatefulSet | 2 replicas (HPA 2 to 4); requests 0.5 CPU and 500 MiB, limits 2 CPU and 3000 MiB; service account `keyvault-access-sa` |
+| **k8s-identity** | user-assigned identity | federated to `keyvault-access-sa`; Key Vault Secrets User, Network Contributor; the cluster pulls from ACR with AcrPull |
+| **rstudio&lt;suffix&gt;** | ACR, Basic | the RStudio image |
+| **nfs&lt;suffix&gt;** | Storage, Premium FileStorage | NFS share `nfs` (100 GiB), reached through a private endpoint and the `privatelink.file.core.windows.net` zone; the pods mount it at `/nfs` and `/home` through a persistent volume |
+| **nfs-gateway-&lt;suffix&gt;** | `rstudio-servers-rg` | Ubuntu 24.04, `Standard_B1s`; joined to AD; mounts the share and serves `/nfs` over Samba |
+| **win-ad-&lt;suffix&gt;** | `rstudio-servers-rg` | Windows Server, `Standard_DS1_v2`; joined to AD; RSAT; maps the gateway's share as `Z:` |
+| **mini-AD** | `mini-ad-subnet` | [`module-azure-mini-ad`](https://github.com/mamonaco1973/module-azure-mini-ad) Samba DC for `rstudio.mikecloud.com` (`RSTUDIO`) |
+| **ad-key-vault-&lt;suffix&gt;** | Key Vault | admin, user, VM and RStudio passwords |
+| **bastion-host** | `AzureBastionSubnet` | Azure Bastion; the VMs have no public IPs |
 
-- **Active Directory authentication** (via a Samba-based Mini-AD Domain Controller)  
-- **Azure Files NFS shares** for persistent, shared storage  
-- **Azure Workload Identity + Key Vault** for secure, secretless pod-level authentication  
-- **Azure Container Registry (ACR)** for hosting the custom RStudio Server image  
-- A **template-driven Kubernetes manifest (`rstudio-app.yaml`)** which is rendered by Terraform and deployed via `kubectl` to provision the RStudio StatefulSet, PersistentVolume, PersistentVolumeClaim, Service, and Ingress
+## Architecture
 
-Unlike VM-based scaling groups, this solution deploys **containerized RStudio Server pods** on AKS that join the domain at runtime and mount **NFS volumes** for user home directories, project data, and shared R library storage.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="architecture-dark.svg">
+  <img alt="RStudio users reach the NGINX ingress controller on a static public IP with a DNS label over HTTP port 80, with cookie session affinity, in the rstudio-aks AKS cluster. It forwards to port 8787 on the pods of the rstudio StatefulSet, two to four RStudio containers from the ACR image on the default node pool (Standard_D2s_v3, one to four nodes). Each pod signs in to Key Vault through workload identity for the AD join password, joins the mini-AD Samba domain controller with SSSD when it starts, and mounts the Premium Azure Files NFS share, reached through a private endpoint, at /nfs and /home, including the shared R library /nfs/rlibs. Administrators use Azure Bastion to reach the Windows admin VM, which maps the nfs-gateway's SMB share as drive Z:; the gateway mounts the same NFS share and is also joined to the domain." src="architecture-light.svg">
+</picture>
 
-Key capabilities demonstrated:
+Regenerate with `python3 make_diagram.py`. The gateway and Windows VM also
+join the domain; those lines are left off the diagram to keep it readable.
 
-1. **AKS-Hosted RStudio Server** – RStudio Server (Open Source Edition) runs as containers on Azure Kubernetes Service for elasticity, self-healing, and cost-efficient scaling.  
-2. **Active Directory Authentication** – Pods authenticate against a Samba-based Active Directory domain, providing centralized and consistent user identity management.  
-3. **Azure Files NFS Persistent Storage** – User home folders and shared R package libraries live on Azure Files (Premium, NFS v4), ensuring cross-pod consistency and reproducible environments.  
-4. **NGINX Ingress with Public IP** – Provides external HTTPS access, session affinity, customizable routing, and native Azure Load Balancer integration.  
-5. **End-to-End Infrastructure as Code** – Terraform builds the AD, networking, Key Vault, NFS storage, ACR, AKS cluster, workload identities, and ingress; Docker builds the RStudio image; the **Terraform-rendered `rstudio-app.yaml` manifest is applied with `kubectl`** to deploy the full RStudio workload.
+- **`01-directory/`**: the resource groups, VNet, subnets, NAT gateway,
+  network security group, Bastion, Key Vault and its secrets, ACR, and the
+  mini-AD DC with users and groups from `scripts/users.json.template`.
+- **`02-servers/`**: the NFS storage account, share and private endpoint,
+  the gateway and Windows VMs.
+- **`03-docker/rstudio/`**: the RStudio image (`Dockerfile`, install scripts
+  and `startup.sh`).
+- **`04-aks/`**: the cluster, the identity and its federated credential,
+  the NGINX Helm release and IP, and `yaml/rstudio-app.yaml.tmpl` (storage
+  class, volume and claim, secret, StatefulSet, services, ingress and HPA).
+- **`05-rsamples/`**: sample R scripts and `packages.R`.
+- **`06-utils/`**: `getNextUID` / `getNextGID` scripts for adding AD users.
 
-Together, these components form a scalable, domain-aware analytics platform where RStudio users share packages, data, and authentication seamlessly across a fully managed Azure Kubernetes environment.
+## How a pod starts
 
-![diagram](azure-rstudio-aks.png)
+The image's `startup.sh` starts D-Bus, signs in to Azure as the pod's
+workload identity, reads the AD admin password from Key Vault, joins the
+domain with `realm join` (SSSD with short names and the POSIX IDs from AD),
+gives `linux-admins` passwordless sudo, writes `Rprofile.site` so the
+library path is the user's own library, then `/nfs/rlibs`, then the system
+library, and runs RStudio Server in the foreground. `/nfs/rlibs` belongs to
+`rstudio-admins`.
 
+Because `/home` lives on the share, a user sees the same files whichever pod
+the ingress sends them to.
+
+## Users and groups
+
+| User | uidNumber | Groups | Notes |
+|---|---|---|---|
+| jsmith | 10001 | rstudio-users, us, linux-admins, rstudio-admins, Domain Admins | sudo; writes `/nfs/rlibs` |
+| edavis | 10002 | rstudio-users, us | |
+| rpatel | 10003 | rstudio-users, india, linux-admins, rstudio-admins, Domain Admins | sudo; writes `/nfs/rlibs` |
+| akumar | 10004 | rstudio-users, india | |
+
+| Group | gidNumber |
+|---|---|
+| rstudio-users | 10001 (every user's primary group) |
+| us | 10002 |
+| india | 10003 |
+| linux-admins | 10004 |
+| rstudio-admins | 10005 |
 
 ## Prerequisites
 
 * [An Azure Account](https://portal.azure.com/)
-* [Install AZ CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) 
+* [Install AZ CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)
 * [Install Terraform](https://developer.hashicorp.com/terraform/install)
-* [Install kubectl](https://kubernetes.io/docs/tasks/tools/)
 * [Install Docker](https://docs.docker.com/engine/install/)
-* [Microsoft.App](https://learn.microsoft.com/en-us/azure/container-apps/) Provider must be enabled
-* `User Access Administrator` role must be assigned to build identity
+* [Install kubectl](https://kubernetes.io/docs/tasks/tools/) and
+  [jq](https://jqlang.github.io/jq/download/)
 
-![role](azure-user-role.png)
+`check_env.sh` expects a service principal in `ARM_CLIENT_ID`,
+`ARM_CLIENT_SECRET`, `ARM_SUBSCRIPTION_ID` and `ARM_TENANT_ID`. It needs the
+**User Access Administrator** role as well as Contributor, because
+Terraform creates role assignments:
 
-If this is your first time watching our content, we recommend starting with this video: [Azure + Terraform: Easy Setup](https://www.youtube.com/watch?v=j4aRjgH5H8Q). It provides a step-by-step guide to properly configure Terraform, Packer, and the AZ CLI.
+![User Access Administrator assigned to the build identity](azure-user-role.png)
 
-## Download this Repository
+If this is your first time following along, we recommend starting with this
+video: [Azure + Terraform: Easy Setup](https://www.youtube.com/watch?v=j4aRjgH5H8Q).
+
+## Deploy
 
 ```bash
 git clone https://github.com/mamonaco1973/azure-rstudio-aks.git
 cd azure-rstudio-aks
+./apply.sh
 ```
 
-## Build the Code
+`apply.sh` applies `01-directory` and `02-servers`, builds the RStudio image
+and pushes it to ACR if the tag isn't there yet, applies `04-aks`, then
+renders and applies `rstudio-app.yaml`. It ends by running `validate.sh`,
+which waits for the ingress's DNS name to return HTTP 200:
 
-Run [check_env](check_env.sh) to validate your environment, then run [apply](apply.sh) to provision the infrastructure.
-
-```bash
-~/azure-rstudio-aks$ ./apply.sh
-NOTE: Running environment validation...
-NOTE: Validating that required commands are found in your PATH.
-NOTE: az is found in the current PATH.
-NOTE: terraform is found in the current PATH.
-NOTE: docker is found in the current PATH.
-NOTE: jq is found in the current PATH.
-NOTE: All required commands are available.
-NOTE: Checking AWS cli connection.
-NOTE: Successfully logged into AWS.
-NOTE: Building Active Directory instance...
-Initializing the backend...
 ```
-### Build Results
+NOTE: Waiting for endpoint: http://k8s<suffix>.centralus.cloudapp.azure.com
+NOTE: RStudio ready at: http://k8s<suffix>.centralus.cloudapp.azure.com
+```
 
-When the deployment completes, the following resources are created:
+## Try it
 
-- **Networking:**  
-  - A virtual network (VNet) with segmented subnets for Active Directory, AKS, Bastion, and the application tier  
-  - A NAT Gateway for controlled outbound connectivity from private subnets  
-  - Network Security Groups (NSGs) enforcing rules for SSH, RStudio, NFS (2049/TCP), and AD communication  
-  - DNS resolution provided by the Mini Active Directory domain controller  
+1. Open the URL and sign in as one of the users above, with the password
+   from its `*-ad-credentials` secret in Key Vault.
+2. Add a user:
+   1. Connect to `win-ad-<suffix>` through **Bastion** as `jsmith` or
+      `rpatel` and open **Active Directory Users and Computers** with
+      **View > Advanced Features** on.
+   2. Under the domain's **Users** container, create the user with a UPN
+      such as `mcloud@rstudio.mikecloud.com` and an initial password.
 
-- **Identity, Security & Key Vault:**  
-  - Azure Key Vault storing AD administrator credentials, RStudio service credentials, and deployment secrets  
-  - User-assigned managed identities for AKS **Workload Identity** (replaces Kubernetes secrets)  
-  - Role assignments granting pods controlled access to ACR, Key Vault, and storage resources  
-  - NSG rules and identity boundaries ensuring secure, segmented communication across the environment  
+      ![New user in Active Directory Users and Computers](windows.png)
 
-- **Active Directory Domain:**  
-  - A Samba-based “Mini-AD” domain controller deployed on an Azure VM  
-  - Provides Kerberos, LDAP, and DNS services for the cluster  
-  - Integrated with RStudio pods so users authenticate with domain credentials  
+   3. Run `getNextUID.bat` from `06-utils` for the next free `uidNumber`.
+   4. In **Attribute Editor**, set `uidNumber` to that value, `gidNumber` to
+      `10001`, and `uid` to the login name.
+   5. Under **Member Of**, add `rstudio-users` and any other groups.
+   6. Connect to `nfs-gateway-<suffix>` through Bastion and check the
+      mapping with `id mcloud`:
 
-- **Azure Files (Premium NFS):**  
-  - Azure Storage Account configured for **Premium FileStorage** with **NFS v4.1** shares  
-  - Used as persistent backend storage for:  
-    - User home directories  
-    - Shared R library directories  
-  - Private Endpoint + NSG rules ensure secure NFS traffic between AKS nodes and the storage account  
+      ![id output on the Linux gateway](linux.png)
 
-- **AKS Cluster & Node Pool:**  
-  - Azure Kubernetes Service (AKS) cluster deployed via Terraform  
-  - System and/or user node pools sized for RStudio workloads  
-  - Managed Identity integration for secure ACR pulls and Key Vault access  
-  - Autoscaling enabled for dynamic scheduling and cost efficiency  
+   7. Sign in to RStudio as the new user. They can't write `/nfs/rlibs`
+      until they're in `rstudio-admins`.
 
-- **RStudio Application:**  
-  - RStudio Server (Open Source Edition) deployed as a Kubernetes StatefulSet and Service  
-  - NGINX Ingress Controller provides the external entrypoint with a static Public IP  
-  - Ingress routing for `/auth-sign-in` ensures proper health probes and session handling  
-  - Pods join the Active Directory domain at startup and mount **Azure Files NFS** volumes for persistence  
-  - Delivers high availability, reproducibility, and domain-aware multi-user access  
-
-- **Automation & Validation:**  
-  - Terraform modules orchestrate dependency ordering across networking, directory services, AKS, and application layers  
-  - `apply.sh`, `destroy.sh`, and `validate.sh` automate provisioning, cleanup, and health verification  
-  - Validation tests confirm AKS readiness, NGINX ingress routing, NFS mounts, and AD-backed authentication for RStudio users  
-
-- **Sample R Workloads:**  
-  - Example R scripts (Monte Carlo, bell curve, surface plotting, etc.) included to validate the environment  
-
-### Kubernetes Components
-
-![k8s diagram](yaml-diagram.png)
-
-
-### Users and Groups  
-
-The domain controller provisions **sample users and groups** via Terraform templates. These are intended for testing and demonstration.  
-
-#### Groups Created  
-
-| Group Name    | Category  | Scope     | gidNumber |
-|---------------|-----------|----------|-----------|
-| rstudio-users  | Security  | Universal | 10001 |
-| india         | Security  | Universal | 10002 |
-| us            | Security  | Universal | 10003 |
-| linux-admins  | Security  | Universal | 10004 |
-| rstudio-admins  | Security  | Universal | 10005 |
-
-#### Users Created  
-
-| Username | Full Name   | uidNumber | gidNumber | Groups Joined                    |
-|----------|-------------|-----------|-----------|----------------------------------|
-| jsmith   | John Smith  | 10001     | 10001     | rstudio-users, us, linux-admins, rstudio-admins  |
-| edavis   | Emily Davis | 10002     | 10001     | rstudio-users, us                 |
-| rpatel   | Raj Patel   | 10003     | 10001     | rstudio-users, india, linux-admins, rstudio-admins|
-| akumar   | Amit Kumar  | 10004     | 10001     | rstudio-users, india              |
-
-### Creating a New RStudio User
-
-Follow these steps to provision a new user in the Active Directory domain and validate their access to the RStudio cluster:
-
-1. **Connect to the Domain Controller**  
-   - Log into the **`win-ad`** server via **Bastion**
-   - Use the `rpatel` or `jsmith` credentials that were provisioned during cluster deployment.  
-
-2. **Launch Active Directory Users and Computers (ADUC)**  
-   - From the Windows Start menu, open **“Active Directory Users and Computers.”**  
-   - Enable **Advanced Features** under the **View** menu. This ensures you can access the extended attribute tabs (e.g., UID/GID mappings).  
-
-3. **Navigate to the Users Organizational Unit (OU)**  
-   - In the left-hand tree, expand the domain (e.g., `rstudio.mikecloud.com`).  
-   - Select the **Users** OU where all cluster accounts are managed.  
-
-4. **Create a New User Object**  
-   - Right-click the Users OU and choose **New → User.**  
-   - Provide the following:  
-     - **Full Name:** Descriptive user name (e.g., “Mike Cloud”).  
-     - **User Logon Name (User Principal Name / UPN):** e.g., `mcloud@rstudio.mikecloud.com`.  
-     - **Initial Password:** Set an initial password.
-
-![Windows](windows.png)
-
-5. **Assign a Unique UID Number**  
-   - Open **PowerShell** on the AD server.  
-   - Run the script located at:  
-     ```powershell
-     Z:\nfs\azure-rstudio-cluster\06-utils\getNextUID.bat
-     ```  
-   - This script returns the next available **`uidNumber`** to assign to the new account.  
-
-6. **Configure Advanced Attributes**  
-   - In the new user’s **Properties** dialog, open the **Attribute Editor** tab.  
-   - Set the following values:  
-     - `gidNumber` → **10001** (the shared GID for the `rstudio-users` group).  
-     - `uid` → match the user’s AD login ID (e.g., `rpatel`).  
-     - `uidNumber` → the unique numeric value returned from `getNextUID.ps1`.  
-
-7. **Add Group Memberships**  
-   - Go to the **Member Of** tab.  
-   - Add the user to the following groups:  
-     - **rstudio-users** → grants standard RStudio access.  
-     - **us** (or other geographic/departmental group as applicable).  
-
-8. **Validate User on Linux**  
-   - Open an **Bastion** session to the **`nfs-gateway`** instance.  
-   - Run the following command to confirm the user’s identity mapping:  
-     ```bash
-     id mcloud
-     ```  
-   - Verify that the output shows the correct **UID**, **GID**, and group memberships (e.g., `rstudio-users`).  
-
-![Linux](linux.png)
-
-9. **Validate RStudio Access**  
-   - Open the RStudio cluster’s Application Gateway's URL in a browser (e.g., `http://rstudio-cluster-xxxxx.centralus.cloudapp.azure.com/`).  
-   - Log in with the new AD credentials.  
-
-10. **Verify Permissions**  
-   - By default, the new user is **not** a member of the `rstudio-admin` group.  
-   - Attempting to install packages into the **shared library path `/nfs/rlibs`** should fail with a **“Permission denied”** error.  
-   - This confirms the user is restricted to installing packages in their **personal user library** only.  
-
----
-
-✅ **Note:** If you need the user to have administrative rights (e.g., the ability to install packages into the shared library), add them to the **rstudio-admin** group in addition to `rstudio-users`.
-
-### Clean Up  
-
-When finished, remove all resources with:  
+## Teardown
 
 ```bash
 ./destroy.sh
-```  
+```
 
-This uses Terraform to delete the VNet, VMs, Key Vault, storage accounts, NSGs, and secrets.  
+## Notes
 
+- **Lab only.** RStudio is served over plain HTTP. The VM network security
+  group allows 22, 3389, 445, 8787, 2049 and 80 from anywhere, though the
+  VMs have no public IPs.
+- Every pod joins the domain when it starts, so replaced pods leave
+  computer accounts behind in AD.
+- The gateway clones **azure-rstudio-cluster** into the share, not this
+  repository, so the samples and `06-utils` under `Z:` come from that
+  project.
+- `yaml-diagram.png`, the old Kubernetes components picture, was removed
+  with the other old diagrams.
+- The old README listed `india` as 10002 and `us` as 10003; the template
+  sets `us` to 10002 and `india` to 10003.
